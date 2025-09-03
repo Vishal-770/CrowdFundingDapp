@@ -2,8 +2,8 @@ import { createThirdwebClient } from "thirdweb";
 
 const client = createThirdwebClient({
   // use clientId for client side usage
-  clientId: "c6e76d66b5da380cc43f71089110b72e",
+  clientId: process.env.NEXT_PUBLIC_THIRD_WEB_CLIENT_ID!,
   // use secretKey for server side usage
-  secretKey: "HYP...blqA", // replace this with full secret key
+  secretKey: process.env.NEXT_PUBLIC_THIRD_WEB_KEY, // replace this with full secret key
 });
 export default client;
