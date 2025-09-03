@@ -193,7 +193,7 @@ const CampaignCard = ({ campaignAddress }: CampaignCardProps) => {
           </span>
         )}
 
-        <Link href={`/dashboard/campaign/${campaignAddress}`}>
+        <Link href={`/campaign/${campaignAddress}`}>
           <Button size="sm" variant="secondary">
             View
           </Button>
