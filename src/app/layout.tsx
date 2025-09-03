@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThirdwebProvider } from "thirdweb/react";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
             <Navbar />
             {children}
           </ThirdwebProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

@@ -5,9 +5,28 @@ import { useParams } from "next/navigation";
 import React from "react";
 import { getContract, prepareContractCall } from "thirdweb";
 import { sepolia } from "thirdweb/chains";
-import { TransactionButton, useReadContract } from "thirdweb/react";
+import {
+  TransactionButton,
+  useActiveAccount,
+  useReadContract,
+  useSendTransaction,
+} from "thirdweb/react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Trash2, Plus } from "lucide-react";
 import { Copy } from "lucide-react";
+import { toast } from "sonner";
 interface Tier {
   name: string;
   amount: bigint;
@@ -15,13 +34,18 @@ interface Tier {
 }
 const CampaignPage = () => {
   const { contractAddress } = useParams();
+  const { mutate: sendTx, isPending: isSending } = useSendTransaction();
+  const [newTierName, setNewTierName] = React.useState("");
+  const [newTierAmount, setNewTierAmount] = React.useState("");
+  const [removingIndex, setRemovingIndex] = React.useState<number | null>(null);
+  const [isEdit, setIsEdit] = React.useState(false);
 
   const contract = getContract({
     address: contractAddress as string,
     chain: sepolia,
     client,
   });
-
+  const account = useActiveAccount();
   // Reads
   const { data: nameData } = useReadContract({
     contract,
@@ -130,7 +154,97 @@ const CampaignPage = () => {
             </span>
           )}
         </div>
-
+        {account?.address == ownerData && (
+          <div className="flex flex-wrap gap-3 items-center">
+            <Button
+              size="sm"
+              variant={isEdit ? "secondary" : "outline"}
+              onClick={() => {
+                setIsEdit((prev) => !prev);
+                setRemovingIndex(null);
+              }}
+            >
+              {isEdit ? "Exit Edit Mode" : "Enter Edit Mode"}
+            </Button>
+            {isEdit && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Add Tier
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Tier</DialogTitle>
+                    <DialogDescription>
+                      Create a new support tier. Amount is in wei.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="tierName">Name</Label>
+                      <Input
+                        id="tierName"
+                        placeholder="e.g. Bronze Supporter"
+                        value={newTierName}
+                        onChange={(e) => setNewTierName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tierAmount">Amount (wei)</Label>
+                      <Input
+                        id="tierAmount"
+                        type="number"
+                        min={0}
+                        placeholder="1000000000000000"
+                        value={newTierAmount}
+                        onChange={(e) => setNewTierAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="ghost">Cancel</Button>
+                    </DialogClose>
+                    <Button
+                      disabled={
+                        !newTierName.trim() ||
+                        !newTierAmount ||
+                        Number(newTierAmount) <= 0 ||
+                        isSending
+                      }
+                      onClick={() => {
+                        try {
+                          const amt = BigInt(newTierAmount);
+                          const tx = prepareContractCall({
+                            contract,
+                            method:
+                              "function AddTier(string _name, uint256 _amount)",
+                            params: [newTierName, amt],
+                          });
+                          sendTx(tx, {
+                            onSuccess: () => {
+                              setNewTierName("");
+                              setNewTierAmount("");
+                            },
+                          });
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      }}
+                    >
+                      {isSending ? "Adding..." : "Add Tier"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        )}
         {/* Description */}
         <p className="text-lg text-muted-foreground mb-8">
           {descriptionData || "Loading description..."}
@@ -213,19 +327,73 @@ const CampaignPage = () => {
                 {/* <Button disabled={!account} className="mt-auto w-full">
                   Donate
                 </Button> */}
-                <TransactionButton
-                  transaction={() =>
-                    prepareContractCall({
-                      contract: contract,
-                      method: "function fund(uint256 _index) payable",
-                      params: [BigInt(idx)],
-                      value: tier.amount,
-                    })
-                  }
-                  onTransactionConfirmed={() => alert("Success")}
-                >
-                  Donate
-                </TransactionButton>
+                {!isEdit && (
+                  <TransactionButton
+                    transaction={() =>
+                      prepareContractCall({
+                        contract: contract,
+                        method: "function fund(uint256 _index) payable",
+                        params: [BigInt(idx)],
+                        value: tier.amount,
+                      })
+                    }
+                    onTransactionConfirmed={() =>
+                      toast.success("Funded SuccessFully")
+                    }
+                  >
+                    Donate
+                  </TransactionButton>
+                )}
+                {account?.address == ownerData && isEdit && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="mt-3 flex items-center gap-1"
+                        onClick={() => setRemovingIndex(idx)}
+                      >
+                        <Trash2 className="h-4 w-4" /> Remove
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Remove Tier</DialogTitle>
+                        <DialogDescription>
+                          This action will permanently delete the tier &quot;
+                          {tier.name}&quot;.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <p className="text-sm text-muted-foreground">
+                        Are you sure you want to remove this tier? Backer counts
+                        won&apos;t be recoverable.
+                      </p>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="ghost">Cancel</Button>
+                        </DialogClose>
+                        <Button
+                          variant="destructive"
+                          disabled={isSending}
+                          onClick={() => {
+                            if (removingIndex === null) return;
+                            const tx = prepareContractCall({
+                              contract,
+                              method: "function RemoveTier(uint256 _index)",
+                              params: [BigInt(removingIndex)],
+                            });
+                            sendTx(tx, {
+                              onSuccess: () => setRemovingIndex(null),
+                              onSettled: () => setRemovingIndex(null),
+                            });
+                          }}
+                        >
+                          {isSending ? "Removing..." : "Confirm"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             ))}
           </div>
