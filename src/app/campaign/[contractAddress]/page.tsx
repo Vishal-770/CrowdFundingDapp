@@ -300,6 +300,30 @@ const CampaignPage = () => {
               Toggle Pause
             </TransactionButton>
 
+            {goalData !== undefined &&
+              balanceData !== undefined &&
+              balanceData >= goalData && ( // check if campaign goal is reached
+                <>
+                  <br />
+                  <h3>Goal reached successfully!</h3>
+                  <TransactionButton
+                    transaction={() =>
+                      prepareContractCall({
+                        contract,
+                        method: "function withdraw()",
+                        params: [],
+                      })
+                    }
+                    onTransactionConfirmed={() =>
+                      toast.success("Successfully Withdrawn Amount")
+                    }
+                    onError={() => toast.error("Not Allowed to Withdraw")}
+                  >
+                    Withdraw
+                  </TransactionButton>
+                </>
+              )}
+
             {isEdit && <ExtendDeadline contract={contract} />}
           </div>
         )}
@@ -360,7 +384,7 @@ const CampaignPage = () => {
                       prepareContractCall({
                         contract,
                         method:
-                          "function AddTier(string _name, uint256 _amount)",
+                          "function addTier(string _name, uint256 _amount)",
                         params: [newTierName, BigInt(newTierAmount)],
                       })
                     }
@@ -369,7 +393,9 @@ const CampaignPage = () => {
                       setNewTierName("");
                       setNewTierAmount("");
                     }}
-                    onError={() => toast.error("Failed to add tier")}
+                    onError={(error) =>
+                      toast.error("Failed to add tier" + error.message)
+                    }
                   >
                     Add Tier
                   </TransactionButton>
@@ -413,7 +439,9 @@ const CampaignPage = () => {
                     onTransactionConfirmed={() =>
                       toast.success("Funded successfully!")
                     }
-                    onError={() => toast.error("Funding failed")}
+                    onError={(error) =>
+                      toast.error("Funding failed" + error.message)
+                    }
                     className="w-full mt-auto"
                   >
                     Donate
@@ -446,7 +474,7 @@ const CampaignPage = () => {
                           transaction={() =>
                             prepareContractCall({
                               contract,
-                              method: "function RemoveTier(uint256 _index)",
+                              method: "function removeTier(uint256 _index)",
                               params: [BigInt(idx)],
                             })
                           }

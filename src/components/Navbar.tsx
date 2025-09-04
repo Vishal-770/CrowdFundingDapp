@@ -23,7 +23,7 @@ const Navbar = () => {
 
   useEffect(() => setMounted(true), []);
 
-  const baseLinks = [{ name: "Campaigns", href: "/" }];
+  const baseLinks = [{ name: "Campaigns", href: "/home" }];
   const navLinks =
     mounted && account
       ? [
