@@ -1,4 +1,5 @@
 "use client";
+
 import client from "@/app/client";
 import React, { useState } from "react";
 import { getContract } from "thirdweb";
@@ -8,13 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import Link from "next/link";
 
-type CampaignCardProps = {
+interface CampaignCardProps {
   campaignAddress: string;
-};
+}
 
 const CampaignCard = ({ campaignAddress }: CampaignCardProps) => {
   const contract = getContract({
-    client: client,
+    client,
     address: campaignAddress,
     chain: sepolia,
   });
@@ -94,10 +95,7 @@ const CampaignCard = ({ campaignAddress }: CampaignCardProps) => {
           className: "bg-primary text-primary-foreground",
         };
       case 1:
-        return {
-          text: "Successful",
-          className: "bg-secondary text-secondary-foreground",
-        };
+        return { text: "Successful", className: "bg-green-600 text-white" };
       case 2:
         return {
           text: "Failed",
@@ -118,20 +116,20 @@ const CampaignCard = ({ campaignAddress }: CampaignCardProps) => {
   const progress = goal > 0 ? Math.min((balance / goal) * 100, 100) : 0;
 
   return (
-    <div className="border rounded-2xl shadow-sm p-6 hover:shadow-md transition flex flex-col justify-between bg-card text-card-foreground">
+    <div className="border rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 bg-card text-card-foreground p-6 flex flex-col justify-between">
       <div>
-        {/* Name */}
-        <h2 className="text-xl font-semibold mb-2">
+        {/* Campaign Name */}
+        <h2 className="text-2xl font-bold mb-2">
           {isNameLoading ? "Loading name..." : nameData}
         </h2>
 
         {/* Description */}
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
           {isDescriptionLoading ? "Loading description..." : descriptionData}
         </p>
 
-        {/* Owner + Copy */}
-        <div className="flex items-center gap-2 mb-2">
+        {/* Owner */}
+        <div className="flex items-center gap-2 mb-3">
           <p className="text-sm">
             <span className="font-medium">Owner:</span>{" "}
             {isOwnerLoading ? "Loading..." : shortenAddress(ownerData)}
@@ -152,35 +150,39 @@ const CampaignCard = ({ campaignAddress }: CampaignCardProps) => {
         </div>
 
         {/* Goal & Balance */}
-        <p className="text-sm mb-1">
-          <span className="font-medium">Goal:</span>{" "}
-          {isGoalLoading ? "Loading..." : goal.toLocaleString()} wei
-        </p>
-        <p className="text-sm mb-3">
-          <span className="font-medium">Balance:</span>{" "}
-          {isBalanceLoading ? "Loading..." : balance.toLocaleString()} wei
-        </p>
+        <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+          <p>
+            <span className="font-medium">Goal:</span>{" "}
+            {isGoalLoading ? "Loading..." : goal.toLocaleString()} wei
+          </p>
+          <p>
+            <span className="font-medium">Balance:</span>{" "}
+            {isBalanceLoading ? "Loading..." : balance.toLocaleString()} wei
+          </p>
+        </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-muted rounded-full h-3 mb-3 overflow-hidden">
-          <div
-            className="bg-primary h-3 rounded-full transition-all"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="mb-3">
+          <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+            <div
+              className="bg-primary h-3 transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {progress.toFixed(2)}% funded
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          {progress.toFixed(2)}% funded
-        </p>
 
         {/* Deadline */}
-        <p className="text-sm mb-2">
+        <p className="text-sm">
           <span className="font-medium">Deadline:</span>{" "}
           {isDeadlineLoading ? "Loading..." : formatDate(deadlineData)}
         </p>
       </div>
 
       {/* Status + View Button */}
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-6 flex items-center justify-between">
         {isStatusLoading ? (
           <span className="text-sm text-muted-foreground">
             Loading status...
@@ -194,8 +196,8 @@ const CampaignCard = ({ campaignAddress }: CampaignCardProps) => {
         )}
 
         <Link href={`/campaign/${campaignAddress}`}>
-          <Button size="sm" variant="secondary">
-            View
+          <Button size="sm" variant="secondary" className="rounded-full px-4 cursor-pointer">
+            View Details
           </Button>
         </Link>
       </div>

@@ -21,10 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-// ✅ react-hook-form
 import { useForm } from "react-hook-form";
-
-// ✅ thirdweb transaction button
 import { TransactionButton } from "thirdweb/react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -43,6 +40,7 @@ interface CampaignFormData {
 const DashBoardPage = () => {
   const { walletAddress } = useParams();
   const { theme: currentTheme } = useTheme();
+
   const contract = getContract({
     client,
     chain: sepolia,
@@ -71,23 +69,25 @@ const DashBoardPage = () => {
       params: [
         data.name,
         data.description,
-        BigInt(data.goal), // ⚡ convert ETH→wei before sending if needed
+        BigInt(data.goal),
         BigInt(data.duration),
       ],
     });
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen p-6 pt-25">
-      {/* Top Button with Dialog */}
-      <div className="w-full flex justify-end mb-6">
+    <div className="flex flex-col items-center min-h-screen px-4 py-25 md:px-12 bg-background text-foreground">
+      {/* Top Button + Dialog */}
+      <div className="w-full flex justify-end mb-8">
         <Dialog>
           <DialogTrigger asChild>
-            <Button>Create a New Campaign</Button>
+            <Button size="lg" className="rounded-full shadow-md">
+              + Create Campaign
+            </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-lg rounded-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">
-                Create a New Campaign
+              <DialogTitle className="text-xl font-bold text-center">
+                Launch a New Campaign
               </DialogTitle>
             </DialogHeader>
 
@@ -188,7 +188,7 @@ const DashBoardPage = () => {
                   toast.success("Campaign created successfully!");
                   reset();
                 }}
-                className="w-full"
+                className="w-full rounded-full"
               >
                 Create Campaign
               </TransactionButton>
@@ -198,7 +198,7 @@ const DashBoardPage = () => {
       </div>
 
       {/* Campaigns Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+      <div className="grid gap-6 w-full max-w-6xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {campaigns?.map((campaign: Campaigns) => (
           <CampaignCard
             key={campaign.campaignAddress}
@@ -208,7 +208,9 @@ const DashBoardPage = () => {
       </div>
 
       {!isPending && campaigns?.length === 0 && (
-        <p className="text-muted-foreground mt-10">No campaigns found.</p>
+        <p className="text-muted-foreground mt-12 text-center text-lg">
+          You don’t have any campaigns yet. Start by creating one!
+        </p>
       )}
     </div>
   );
