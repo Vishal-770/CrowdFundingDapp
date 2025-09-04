@@ -10,7 +10,7 @@ import {
 import client from "@/app/client";
 import { ModeToggle } from "./ModeToggle";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Blocks } from "lucide-react"; // Added icon
+import { Menu, X, Blocks } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -21,7 +21,6 @@ const Navbar = () => {
   const { theme } = useTheme();
   const account = useActiveAccount();
 
-  // Ensure consistent SSR markup; only use account after mount
   useEffect(() => setMounted(true), []);
 
   const baseLinks = [{ name: "Campaigns", href: "/" }];
@@ -58,17 +57,21 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: Desktop Actions */}
         <div className="flex items-center gap-3">
           <ModeToggle />
-          {mounted ? (
-            <ConnectButton
-              theme={theme === "light" ? lightTheme() : darkTheme()}
-              client={client}
-            />
-          ) : (
-            <div style={{ width: 140, height: 40 }} />
-          )}
+
+          {/* ✅ Only show on desktop */}
+          <div className="hidden md:block">
+            {mounted ? (
+              <ConnectButton
+                theme={theme === "light" ? lightTheme() : darkTheme()}
+                client={client}
+              />
+            ) : (
+              <div style={{ width: 140, height: 40 }} />
+            )}
+          </div>
 
           {/* Mobile toggle button */}
           <div className="md:hidden">
@@ -108,6 +111,21 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
+
+              {/* Divider */}
+              <div className="border-t my-2" />
+
+              {/* ✅ Only show on mobile */}
+              <div className="block md:hidden">
+                {mounted ? (
+                  <ConnectButton
+                    theme={theme === "light" ? lightTheme() : darkTheme()}
+                    client={client}
+                  />
+                ) : (
+                  <div style={{ width: 140, height: 40 }} />
+                )}
+              </div>
             </div>
           </motion.div>
         )}
