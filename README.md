@@ -5,6 +5,12 @@ It enables creators to launch decentralized campaigns and backers to contribute 
 
 ---
 
+## 🔗 Live Demo
+
+👉 [BlockRaise on Vercel](https://crowd-funding-dapp-inky.vercel.app/)
+
+---
+
 ## ✨ Features
 
 - 🏗️ **Decentralized Campaigns** → Fully managed via Ethereum smart contracts.  
@@ -25,6 +31,7 @@ It enables creators to launch decentralized campaigns and backers to contribute 
 - **UI/Styling**: [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)  
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)  
 - **Web3 SDK**: [Thirdweb](https://thirdweb.com/)  
+- **Deployment**: [Vercel](https://vercel.com/)  
 - **Network**: [Ethereum Sepolia Testnet](https://sepolia.etherscan.io/)  
 
 ---
@@ -40,6 +47,6 @@ It enables creators to launch decentralized campaigns and backers to contribute 
 Clone the repo and install dependencies:
 
 ```bash
-git clone https://github.com/your-username/blockraise-dapp.git
+git clone https://github.com/Vishal-770/CrowdFundingDapp.git
 cd blockraise-dapp
 npm install
