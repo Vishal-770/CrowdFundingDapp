@@ -6,6 +6,8 @@ import React from "react";
 import { getContract, prepareContractCall } from "thirdweb";
 import { sepolia } from "thirdweb/chains";
 import {
+  darkTheme,
+  lightTheme,
   TransactionButton,
   useActiveAccount,
   useReadContract,
@@ -25,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2, Plus, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
 
 interface Tier {
   name: string;
@@ -101,6 +104,7 @@ const CampaignPage = () => {
     chain: sepolia,
     client,
   });
+  const { theme } = useTheme();
   const account = useActiveAccount();
   const [isEdit, setIsEdit] = React.useState(false);
   const [newTierName, setNewTierName] = React.useState("");
@@ -427,6 +431,7 @@ const CampaignPage = () => {
 
                 {!isEdit && (
                   <TransactionButton
+                    theme={theme === "light" ? lightTheme() : darkTheme()}
                     disabled={pausedData === true}
                     transaction={() =>
                       prepareContractCall({
