@@ -6,12 +6,9 @@ import React from "react";
 import { getContract, prepareContractCall } from "thirdweb";
 import { sepolia } from "thirdweb/chains";
 import {
-  darkTheme,
-  lightTheme,
   TransactionButton,
   useActiveAccount,
   useReadContract,
-  useSendTransaction,
 } from "thirdweb/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +25,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2, Plus, Copy } from "lucide-react";
 import { toast } from "sonner";
-import { useTheme } from "next-themes";
 
 interface Tier {
   name: string;
@@ -105,9 +101,7 @@ const CampaignPage = () => {
     chain: sepolia,
     client,
   });
-  const { theme } = useTheme();
   const account = useActiveAccount();
-  const { mutate: sendTx, isPending: isSending } = useSendTransaction();
   const [isEdit, setIsEdit] = React.useState(false);
   const [newTierName, setNewTierName] = React.useState("");
   const [newTierAmount, setNewTierAmount] = React.useState("");
@@ -217,11 +211,14 @@ const CampaignPage = () => {
     }
   };
 
-  const getStatusLabel = (status?: number) => {
+  const getStatusLabel = (status?: number, paused?: boolean) => {
+    if (paused) {
+      return { text: "Paused", className: "bg-yellow-500 text-black" };
+    }
     switch (status) {
       case 0:
         return {
-          text: "Not Completed",
+          text: "Active",
           className: "bg-primary text-primary-foreground",
         };
       case 1:
@@ -231,22 +228,10 @@ const CampaignPage = () => {
           text: "Failed",
           className: "bg-destructive text-destructive-foreground",
         };
-      case 3:
-        return { text: "Paused", className: "bg-yellow-500 text-black" };
       default:
         return { text: "Unknown", className: "bg-muted text-muted-foreground" };
     }
   };
-
-  // USD amounts (with 8 decimals)
-  const goalUSD = goalData ? Number(goalData) / 1e8 : 0;
-  const balanceUSD = totalRaisedUSDData ? Number(totalRaisedUSDData) / 1e8 : 0;
-  const balanceETH = balanceData ? weiToETH(balanceData) : 0;
-  const goalETH = ethPrice > 0 ? goalUSD / ethPrice : 0;
-  const ethPrice = ethPriceData ? Math.abs(Number(ethPriceData)) / 1e8 : 0;
-
-  const progress =
-    goalUSD > 0 ? Math.min((balanceUSD / goalUSD) * 100, 100) : 0;
 
   const formatUSD = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -270,6 +255,13 @@ const CampaignPage = () => {
     return Number(wei) / 1e18;
   };
 
+  // USD amounts (with 8 decimals)
+  const ethPrice = ethPriceData ? Math.abs(Number(ethPriceData)) / 1e8 : 0;
+  const goalUSD = goalData ? Number(goalData) / 1e8 : 0;
+  const balanceUSD = totalRaisedUSDData ? Number(totalRaisedUSDData) / 1e8 : 0;
+  const balanceETH = balanceData ? weiToETH(balanceData) : 0;
+  const goalETH = ethPrice > 0 ? goalUSD / ethPrice : 0;
+
   const formatTierAmount = (amountBigInt: bigint) => {
     const amountUSD = Number(amountBigInt) / 1e8;
     return formatUSD(amountUSD);
@@ -283,21 +275,18 @@ const CampaignPage = () => {
     return null;
   };
 
-  const convertWeiToUSD = (weiAmount: number) => {
-    if (ethPrice > 0) {
-      return (weiAmount / 1e18) * ethPrice;
-    }
-    return 0;
-  };
-
   const userContributionsUSD = backerDetailsData
     ? Number(backerDetailsData[0]) / 1e8
     : 0;
   const userContributionsWei = backerDetailsData
     ? Number(backerDetailsData[1])
     : 0;
+  const progress =
+    goalUSD > 0 ? Math.min((balanceUSD / goalUSD) * 100, 100) : 0;
   const status =
-    statusData !== undefined ? getStatusLabel(Number(statusData)) : null;
+    statusData !== undefined
+      ? getStatusLabel(Number(statusData), pausedData)
+      : null;
 
   return (
     <div className="w-full min-h-screen bg-background px-6 md:px-12 py-28">
