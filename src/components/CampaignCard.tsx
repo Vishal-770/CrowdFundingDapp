@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface CampaignCardProps {
   campaignAddress: string;
@@ -119,91 +120,95 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
 
   /* -------------------- UI -------------------- */
   return (
-    <Card className="transition hover:shadow-md">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">{name}</CardTitle>
-            <CardDescription className="mt-1">{description}</CardDescription>
+    <Link href={`/campaign/${campaignAddress}`}>
+      <Card className="transition hover:shadow-md cursor-pointer">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-lg">{name}</CardTitle>
+              <CardDescription className="mt-1">{description}</CardDescription>
+            </div>
+            <Badge variant={statusVariant}>
+              {isPaused ? "Paused" : campaignStateLabel}
+            </Badge>
           </div>
-          <Badge variant={statusVariant}>
-            {isPaused ? "Paused" : campaignStateLabel}
-          </Badge>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent className="space-y-5">
-        {/* ETH Price */}
-        <p className="text-sm text-muted-foreground">
-          ETH Price Today:{" "}
-          <span className="font-medium text-foreground">
-            ${ethUsd.toFixed(2)}
-          </span>
-        </p>
-
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Raised</span>
-            <span className="font-medium">{progress.toFixed(1)}%</span>
-          </div>
-          <Progress value={progress} />
-        </div>
-
-        {/* Funding Stats */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <Stat
-            label="Goal"
-            eth={goalEth.toFixed(2)}
-            usd={(goalEth * ethUsd).toFixed(2)}
-          />
-          <Stat
-            label="Raised"
-            eth={raisedEth.toFixed(4)}
-            usd={(raisedEth * ethUsd).toFixed(2)}
-          />
-          <Stat
-            label="Remaining"
-            eth={remainingEth.toFixed(4)}
-            usd={(remainingEth * ethUsd).toFixed(2)}
-          />
-          <div>
-            <p className="text-muted-foreground">Backers</p>
-            <p className="font-medium">{Number(backers)}</p>
-          </div>
-        </div>
-
-        {/* Meta */}
-        <div className="border-t pt-4 text-sm space-y-1">
-          <p>
-            <span className="text-muted-foreground">Deadline:</span>{" "}
-            {deadlineDate.toLocaleDateString()} ({daysLeft} days left)
+        <CardContent className="space-y-5">
+          {/* ETH Price */}
+          <p className="text-sm text-muted-foreground">
+            ETH Price Today:{" "}
+            <span className="font-medium text-foreground">
+              ${ethUsd.toFixed(2)}
+            </span>
           </p>
-          <div className="flex items-center justify-between">
-            <p>
-              <span className="text-muted-foreground">Owner:</span>{" "}
-              {owner.slice(0, 6)}…{owner.slice(-4)}
-            </p>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={async () => {
-                await navigator.clipboard.writeText(campaignAddress);
-                setCopied(true);
-                toast.success("Address copied to clipboard!");
-                setTimeout(() => setCopied(false), 2000);
-              }}
-            >
-              {copied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
+
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Raised</span>
+              <span className="font-medium">{progress.toFixed(1)}%</span>
+            </div>
+            <Progress value={progress} />
           </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          {/* Funding Stats */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <Stat
+              label="Goal"
+              eth={goalEth.toFixed(2)}
+              usd={(goalEth * ethUsd).toFixed(2)}
+            />
+            <Stat
+              label="Raised"
+              eth={raisedEth.toFixed(4)}
+              usd={(raisedEth * ethUsd).toFixed(2)}
+            />
+            <Stat
+              label="Remaining"
+              eth={remainingEth.toFixed(4)}
+              usd={(remainingEth * ethUsd).toFixed(2)}
+            />
+            <div>
+              <p className="text-muted-foreground">Backers</p>
+              <p className="font-medium">{Number(backers)}</p>
+            </div>
+          </div>
+
+          {/* Meta */}
+          <div className="border-t pt-4 text-sm space-y-1">
+            <p>
+              <span className="text-muted-foreground">Deadline:</span>{" "}
+              {deadlineDate.toLocaleDateString()} ({daysLeft} days left)
+            </p>
+            <div className="flex items-center justify-between">
+              <p>
+                <span className="text-muted-foreground">Owner:</span>{" "}
+                {owner.slice(0, 6)}…{owner.slice(-4)}
+              </p>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  await navigator.clipboard.writeText(campaignAddress);
+                  setCopied(true);
+                  toast.success("Address copied to clipboard!");
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
