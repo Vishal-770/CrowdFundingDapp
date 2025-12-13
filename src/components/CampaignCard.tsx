@@ -1,6 +1,7 @@
 "use client";
 
 import client from "@/app/client";
+import React, { useState } from "react";
 import { getContract } from "thirdweb";
 import { sepolia } from "thirdweb/chains";
 import { useReadContract } from "thirdweb/react";
@@ -15,12 +16,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface CampaignCardProps {
   campaignAddress: string;
 }
 
 export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
+  const [copied, setCopied] = useState(false);
+
   const contract = getContract({
     client,
     address: campaignAddress,
@@ -173,10 +179,28 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
             <span className="text-muted-foreground">Deadline:</span>{" "}
             {deadlineDate.toLocaleDateString()} ({daysLeft} days left)
           </p>
-          <p>
-            <span className="text-muted-foreground">Owner:</span>{" "}
-            {owner.slice(0, 6)}…{owner.slice(-4)}
-          </p>
+          <div className="flex items-center justify-between">
+            <p>
+              <span className="text-muted-foreground">Owner:</span>{" "}
+              {owner.slice(0, 6)}…{owner.slice(-4)}
+            </p>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={async () => {
+                await navigator.clipboard.writeText(campaignAddress);
+                setCopied(true);
+                toast.success("Address copied to clipboard!");
+                setTimeout(() => setCopied(false), 2000);
+              }}
+            >
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
