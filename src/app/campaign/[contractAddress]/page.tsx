@@ -11,6 +11,7 @@ import {
   TransactionButton,
   useActiveAccount,
   useReadContract,
+  useSendTransaction,
 } from "thirdweb/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,6 +107,7 @@ const CampaignPage = () => {
   });
   const { theme } = useTheme();
   const account = useActiveAccount();
+  const { mutate: sendTx, isPending: isSending } = useSendTransaction();
   const [isEdit, setIsEdit] = React.useState(false);
   const [newTierName, setNewTierName] = React.useState("");
   const [newTierAmount, setNewTierAmount] = React.useState("");
@@ -125,7 +127,7 @@ const CampaignPage = () => {
   });
   const { data: goalData } = useReadContract({
     contract,
-    method: "function goal() view returns (uint256)",
+    method: "function getGoalInUSD() view returns (uint256)",
   });
   const { data: balanceData } = useReadContract({
     contract,
@@ -149,6 +151,42 @@ const CampaignPage = () => {
       "function getTiers() view returns ((string name, uint256 amount, uint256 backers)[])",
   });
 
+  // Additional reads for better UX
+  const { data: timeRemainingData } = useReadContract({
+    contract,
+    method: "function getTimeRemaining() view returns (uint256)",
+  });
+
+  const { data: campaignDetailsData } = useReadContract({
+    contract,
+    method:
+      "function getCampaignDetails() view returns (string campaignName, string campaignDescription, uint256 campaignGoal, uint256 campaignDeadline, address campaignOwner, bool isPaused, uint8 campaignState, uint256 raisedAmount, uint256 totalBackers)",
+  });
+
+  // Get current ETH price and conversion functions
+  const { data: ethPriceData } = useReadContract({
+    contract,
+    method: "function getLatestETHPrice() view returns (int256)",
+  });
+
+  const { data: totalRaisedUSDData } = useReadContract({
+    contract,
+    method: "function getTotalRaisedUSD() view returns (uint256)",
+  });
+
+  const { data: goalInWeiData } = useReadContract({
+    contract,
+    method: "function getGoalInWei() view returns (uint256)",
+  });
+
+  // Get user contributions for refund
+  const { data: backerDetailsData } = useReadContract({
+    contract,
+    method:
+      "function getBackerDetails(address _backer) view returns (uint256 totalContributionsUSD, uint256 totalContributionsWei, uint256[] memory fundedTierIndices)",
+    params: [account?.address ?? "0x0000000000000000000000000000000000000000"],
+  });
+
   // Helpers
   const shortenAddress = (addr?: string) =>
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
@@ -161,6 +199,22 @@ const CampaignPage = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const formatTimeRemaining = (seconds?: bigint) => {
+    if (!seconds || Number(seconds) <= 0) return "Ended";
+    const totalSeconds = Number(seconds);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
   };
 
   const getStatusLabel = (status?: number) => {
@@ -184,9 +238,64 @@ const CampaignPage = () => {
     }
   };
 
-  const goal = goalData ? Number(goalData) : 0;
-  const balance = balanceData ? Number(balanceData) : 0;
-  const progress = goal > 0 ? Math.min((balance / goal) * 100, 100) : 0;
+  // USD amounts (with 8 decimals)
+  const goalUSD = goalData ? Number(goalData) / 1e8 : 0;
+  const balanceUSD = totalRaisedUSDData ? Number(totalRaisedUSDData) / 1e8 : 0;
+  const balanceETH = balanceData ? weiToETH(balanceData) : 0;
+  const goalETH = ethPrice > 0 ? goalUSD / ethPrice : 0;
+  const ethPrice = ethPriceData ? Math.abs(Number(ethPriceData)) / 1e8 : 0;
+
+  const progress =
+    goalUSD > 0 ? Math.min((balanceUSD / goalUSD) * 100, 100) : 0;
+
+  const formatUSD = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatETH = (amount: number) => {
+    return (
+      new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6,
+      }).format(amount) + " ETH"
+    );
+  };
+
+  const weiToETH = (wei: bigint | number) => {
+    return Number(wei) / 1e18;
+  };
+
+  const formatTierAmount = (amountBigInt: bigint) => {
+    const amountUSD = Number(amountBigInt) / 1e8;
+    return formatUSD(amountUSD);
+  };
+
+  // Tier validation helper
+  const validateTierAmount = (tierAmountUSD: number) => {
+    if (goalUSD > 0 && tierAmountUSD > goalUSD) {
+      return "Tier amount cannot exceed campaign goal";
+    }
+    return null;
+  };
+
+  const convertWeiToUSD = (weiAmount: number) => {
+    if (ethPrice > 0) {
+      return (weiAmount / 1e18) * ethPrice;
+    }
+    return 0;
+  };
+
+  const userContributionsUSD = backerDetailsData
+    ? Number(backerDetailsData[0]) / 1e8
+    : 0;
+  const userContributionsWei = backerDetailsData
+    ? Number(backerDetailsData[1])
+    : 0;
   const status =
     statusData !== undefined ? getStatusLabel(Number(statusData)) : null;
 
@@ -249,12 +358,18 @@ const CampaignPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           <div className="bg-muted rounded-xl p-4">
             <p className="text-sm text-muted-foreground mb-1">Goal</p>
-            <p className="text-xl font-semibold">{goal.toLocaleString()} wei</p>
+            <p className="text-xl font-semibold">{formatUSD(goalUSD)}</p>
+            {goalETH > 0 && (
+              <p className="text-xs text-muted-foreground">
+                ≈ {formatETH(goalETH)}
+              </p>
+            )}
           </div>
           <div className="bg-muted rounded-xl p-4">
-            <p className="text-sm text-muted-foreground mb-1">Balance</p>
-            <p className="text-xl font-semibold">
-              {balance.toLocaleString()} wei
+            <p className="text-sm text-muted-foreground mb-1">Raised</p>
+            <p className="text-xl font-semibold">{formatUSD(balanceUSD)}</p>
+            <p className="text-xs text-muted-foreground">
+              ≈ {formatETH(balanceETH)}
             </p>
           </div>
         </div>
@@ -268,13 +383,49 @@ const CampaignPage = () => {
             />
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            {progress.toFixed(2)}% funded
+            {progress.toFixed(2)}% funded • {formatUSD(goalUSD - balanceUSD)}{" "}
+            remaining
           </p>
+        </div>
+
+        {/* Campaign Statistics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-primary">
+              {campaignDetailsData ? Number(campaignDetailsData[8]) : 0}
+            </p>
+            <p className="text-xs text-muted-foreground">Backers</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-primary">
+              {tiersData ? tiersData.length : 0}
+            </p>
+            <p className="text-xs text-muted-foreground">Tiers</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-primary">
+              {timeRemainingData && Number(timeRemainingData) > 0
+                ? formatTimeRemaining(timeRemainingData)
+                : "Ended"}
+            </p>
+            <p className="text-xs text-muted-foreground">Time Left</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-primary">
+              {ethPrice > 0 ? formatUSD(ethPrice) : "Loading..."}
+            </p>
+            <p className="text-xs text-muted-foreground">ETH Price</p>
+          </div>
         </div>
 
         <p className="text-base">
           <span className="font-medium">Deadline:</span>{" "}
           {formatDate(deadlineData)}
+          {timeRemainingData && Number(timeRemainingData) > 0 && (
+            <span className="text-sm text-muted-foreground ml-2">
+              ({formatTimeRemaining(timeRemainingData)} remaining)
+            </span>
+          )}
         </p>
 
         {/* Owner Actions */}
@@ -304,9 +455,9 @@ const CampaignPage = () => {
               Toggle Pause
             </TransactionButton>
 
-            {goalData !== undefined &&
+            {goalInWeiData !== undefined &&
               balanceData !== undefined &&
-              balanceData >= goalData && ( // check if campaign goal is reached
+              balanceData >= goalInWeiData && ( // check if campaign goal is reached
                 <>
                   <br />
                   <h3>Goal reached successfully!</h3>
@@ -331,6 +482,39 @@ const CampaignPage = () => {
             {isEdit && <ExtendDeadline contract={contract} />}
           </div>
         )}
+
+        {/* Refund Section for Failed Campaigns */}
+        {account && status?.text === "Failed" && userContributionsUSD > 0 && (
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-destructive/20">
+            <h3 className="font-semibold text-lg mb-2 text-destructive">
+              Campaign Failed - Refund Available
+            </h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              You contributed {formatUSD(userContributionsUSD)} (
+              {(userContributionsWei / 1e18).toFixed(6)} ETH) to this campaign.
+              Since the campaign failed to meet its goal, you can claim a
+              refund.
+            </p>
+            <TransactionButton
+              transaction={() =>
+                prepareContractCall({
+                  contract,
+                  method: "function refund()",
+                  params: [],
+                })
+              }
+              onTransactionConfirmed={() =>
+                toast.success("Refund processed successfully!")
+              }
+              onError={(error) =>
+                toast.error("Failed to process refund: " + error.message)
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Claim Refund
+            </TransactionButton>
+          </div>
+        )}
       </div>
 
       {/* Tiers Section */}
@@ -349,7 +533,7 @@ const CampaignPage = () => {
                 <DialogHeader>
                   <DialogTitle>Add New Tier</DialogTitle>
                   <DialogDescription>
-                    Create a new support tier. Amount is in wei.
+                    Create a new support tier. Amount is in USD.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
@@ -363,15 +547,27 @@ const CampaignPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="tierAmount">Amount (wei)</Label>
+                    <Label htmlFor="tierAmount">Amount (USD)</Label>
                     <Input
                       id="tierAmount"
                       type="number"
                       min={0}
-                      placeholder="1000000000000000"
+                      step="0.01"
+                      placeholder="10.00"
                       value={newTierAmount}
                       onChange={(e) => setNewTierAmount(e.target.value)}
                     />
+                    {newTierAmount && ethPrice > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        ≈ {formatETH(parseFloat(newTierAmount) / ethPrice)}
+                      </p>
+                    )}
+                    {newTierAmount &&
+                      validateTierAmount(parseFloat(newTierAmount)) && (
+                        <p className="text-sm text-destructive">
+                          {validateTierAmount(parseFloat(newTierAmount))}
+                        </p>
+                      )}
                   </div>
                 </div>
                 <DialogFooter>
@@ -382,16 +578,21 @@ const CampaignPage = () => {
                     disabled={
                       !newTierName.trim() ||
                       !newTierAmount ||
-                      Number(newTierAmount) <= 0
+                      Number(newTierAmount) <= 0 ||
+                      validateTierAmount(parseFloat(newTierAmount)) !== null
                     }
-                    transaction={() =>
-                      prepareContractCall({
+                    transaction={() => {
+                      // Convert USD to 8-decimal format (e.g., $10.00 -> 1000000000)
+                      const amtUSD = Math.round(
+                        parseFloat(newTierAmount) * 1e8
+                      );
+                      return prepareContractCall({
                         contract,
                         method:
                           "function addTier(string _name, uint256 _amount)",
-                        params: [newTierName, BigInt(newTierAmount)],
-                      })
-                    }
+                        params: [newTierName, BigInt(amtUSD)],
+                      });
+                    }}
                     onTransactionConfirmed={() => {
                       toast.success("Tier added successfully!");
                       setNewTierName("");
@@ -416,40 +617,65 @@ const CampaignPage = () => {
             {tiersData?.map((tier: Tier, idx: number) => (
               <div
                 key={idx}
-                className="border rounded-xl shadow-sm p-6 bg-card text-card-foreground flex flex-col justify-between hover:shadow-md transition"
+                className="border rounded-xl shadow-sm p-6 bg-card text-card-foreground flex flex-col justify-between hover:shadow-md transition-all duration-300"
               >
                 <div>
                   <h3 className="text-lg font-bold mb-2">{tier.name}</h3>
                   <p className="text-sm mb-1">
                     <span className="font-medium">Amount:</span>{" "}
-                    {Number(tier.amount).toLocaleString()} wei
+                    {formatTierAmount(tier.amount)}
                   </p>
+                  {ethPrice > 0 && (
+                    <p className="text-xs text-muted-foreground mb-1">
+                      ≈ {formatETH(Number(tier.amount) / 1e8 / ethPrice)}
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground mb-4">
                     {Number(tier.backers)} backers
                   </p>
+                  {backerDetailsData &&
+                    backerDetailsData[2].includes(BigInt(idx)) && (
+                      <div className="mb-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <p className="text-xs text-green-700 dark:text-green-300 font-medium">
+                          ✓ You funded this tier
+                        </p>
+                      </div>
+                    )}
                 </div>
 
                 {!isEdit && (
                   <TransactionButton
-                    theme={theme === "light" ? lightTheme() : darkTheme()}
-                    disabled={pausedData === true}
-                    transaction={() =>
-                      prepareContractCall({
+                    className="w-full mt-auto"
+                    disabled={pausedData === true || status?.text !== "Active"}
+                    transaction={async () => {
+                      // Get the tier price in wei for the transaction
+                      const { readContract } = await import("thirdweb");
+                      const tierPriceInWei = await readContract({
+                        contract,
+                        method:
+                          "function getTierPriceInWei(uint256) view returns (uint256)",
+                        params: [BigInt(idx)],
+                      });
+
+                      return prepareContractCall({
                         contract,
                         method: "function fund(uint256 _index) payable",
                         params: [BigInt(idx)],
-                        value: tier.amount,
-                      })
-                    }
+                        value: tierPriceInWei,
+                      });
+                    }}
                     onTransactionConfirmed={() =>
-                      toast.success("Funded successfully!")
+                      toast.success(`Successfully funded ${tier.name} tier!`)
                     }
                     onError={(error) =>
-                      toast.error("Funding failed" + error.message)
+                      toast.error("Funding failed: " + error.message)
                     }
-                    className="w-full mt-auto"
                   >
-                    Donate
+                    {pausedData === true
+                      ? "Campaign Paused"
+                      : status?.text !== "Active"
+                      ? "Campaign Not Active"
+                      : "Fund This Tier"}
                   </TransactionButton>
                 )}
 

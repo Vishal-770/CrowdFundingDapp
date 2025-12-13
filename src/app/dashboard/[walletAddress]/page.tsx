@@ -61,18 +61,22 @@ const DashBoardPage = () => {
     formState: { errors },
   } = useForm<CampaignFormData>();
 
-  const buildTx = (data: CampaignFormData) =>
-    prepareContractCall({
+  const buildTx = (data: CampaignFormData) => {
+    // Convert ETH to wei (e.g., 2.5 ETH -> 2500000000000000000 wei)
+    const goalInWei = parseFloat(data.goal) * 1e18;
+
+    return prepareContractCall({
       contract,
       method:
         "function createCampaign(string _name, string _description, uint256 _goal, uint256 _durationInDays)",
       params: [
         data.name,
         data.description,
-        BigInt(data.goal),
+        BigInt(goalInWei),
         BigInt(data.duration),
       ],
     });
+  };
 
   return (
     <div className="flex flex-col items-center min-h-screen px-4 py-25 md:px-12 bg-background text-foreground">
@@ -131,14 +135,17 @@ const DashBoardPage = () => {
                 <Input
                   id="goal"
                   type="number"
-                  step="any"
-                  placeholder="10"
+                  step="0.001"
+                  placeholder="2.5"
                   {...register("goal", {
                     required: "Goal is required",
                     validate: (val) =>
                       Number(val) > 0 || "Goal must be greater than 0",
                   })}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Enter your funding goal in ETH
+                </p>
                 {errors.goal && (
                   <p className="text-sm text-red-500">{errors.goal.message}</p>
                 )}
