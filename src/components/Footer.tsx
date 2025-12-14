@@ -27,7 +27,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="#"
+                  href="/documentation"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Documentation
@@ -35,7 +35,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/tutorials"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Tutorials
@@ -43,7 +43,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/api"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   API
@@ -51,7 +51,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/help-center"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Help Center

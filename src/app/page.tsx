@@ -1,7 +1,15 @@
 "use client";
 
+import Footer from "@/components/Footer";
+import { TestimonialsColumn } from "@/components/testimonials-columns-1";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { motion } from "framer-motion";
 import { Rocket, ShieldCheck, Users, Zap, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -23,12 +31,11 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Navigation Bar */}
 
       {/* Hero Section */}
       <section className="relative py-25 px-6 overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 to-primary/10 opacity-30"></div>
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -133,7 +140,7 @@ export default function LandingPage() {
             className="grid md:grid-cols-3 gap-8"
           >
             <motion.div variants={fadeIn}>
-              <Card className="rounded-2xl border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full bg-gradient-to-b from-background to-muted/30">
+              <Card className="rounded-2xl border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full bg-background">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className="p-3 bg-primary/10 rounded-full mb-4">
                     <Rocket className="w-8 h-8 text-primary" />
@@ -148,7 +155,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div variants={fadeIn}>
-              <Card className="rounded-2xl border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full bg-gradient-to-b from-background to-muted/30">
+              <Card className="rounded-2xl border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full bg-background">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className="p-3 bg-primary/10 rounded-full mb-4">
                     <ShieldCheck className="w-8 h-8 text-primary" />
@@ -165,7 +172,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div variants={fadeIn}>
-              <Card className="rounded-2xl border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full bg-gradient-to-b from-background to-muted/30">
+              <Card className="rounded-2xl border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full bg-background">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className="p-3 bg-primary/10 rounded-full mb-4">
                     <Users className="w-8 h-8 text-primary" />
@@ -185,7 +192,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonial Section */}
-      <section className="py-20 px-6 bg-muted/30">
+      <section className="py-20 px-6 bg-background">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -203,91 +210,10 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card className="rounded-2xl border-none shadow-md bg-background hover:shadow-lg transition-shadow h-full">
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4">
-                      <span className="font-bold">JD</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Jane Doe</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Indie Game Developer
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground">
-                    &quot;BlockRaise helped me fund my game project in just 2
-                    weeks. The transparency of blockchain gave my backers
-                    confidence.&quot;
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              <Card className="rounded-2xl border-none shadow-md bg-background hover:shadow-lg transition-shadow h-full">
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4">
-                      <span className="font-bold">JS</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">John Smith</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Climate Tech Founder
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground">
-                    &quot;As an international startup, traditional crowdfunding
-                    platforms had too many restrictions. BlockRaise was the
-                    perfect solution.&quot;
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              viewport={{ once: true }}
-              className="md:col-span-2 lg:col-span-1"
-            >
-              <Card className="rounded-2xl border-none shadow-md bg-background hover:shadow-lg transition-shadow h-full">
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4">
-                      <span className="font-bold">AR</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Alex Rivera</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Open Source Maintainer
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground">
-                    &quot;The Web3 community rallied behind our project in ways
-                    traditional platforms never allowed. The future of funding
-                    is here.&quot;
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+          <div className="flex items-center justify-center gap-6 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)] max-h-[738px] overflow-hidden">
+            <TestimonialsColumn duration={15} />
+            <TestimonialsColumn duration={15} className="hidden md:flex" />
+            <TestimonialsColumn duration={15} className="hidden lg:flex" />
           </div>
         </div>
       </section>
@@ -300,7 +226,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            className="rounded-3xl bg-gradient-to-r from-primary to-primary/80 p-1 shadow-xl"
+            className="rounded-3xl bg-primary p-1 shadow-xl"
           >
             <div className="bg-background rounded-3xl p-12 text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
@@ -331,7 +257,88 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="py-20 px-6 bg-background">
+        <div className="container mx-auto max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Everything you need to know about BlockRaise crowdfunding.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              <AccordionItem value="item-1" className="border rounded-lg px-6">
+                <AccordionTrigger className="text-left">
+                  What is BlockRaise?
+                </AccordionTrigger>
+                <AccordionContent>
+                  BlockRaise is a decentralized crowdfunding platform built on
+                  Ethereum, allowing creators to launch campaigns and backers to
+                  support projects transparently using blockchain technology.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-2" className="border rounded-lg px-6">
+                <AccordionTrigger className="text-left">
+                  How do I create a campaign?
+                </AccordionTrigger>
+                <AccordionContent>
+                  Connect your wallet, click "Create Campaign", fill in your
+                  project details, set funding goals and deadlines, and deploy
+                  your campaign to the blockchain.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-3" className="border rounded-lg px-6">
+                <AccordionTrigger className="text-left">
+                  Is my money safe?
+                </AccordionTrigger>
+                <AccordionContent>
+                  Yes! Funds are held in smart contracts and only released to
+                  creators when goals are met. If a campaign fails, backers can
+                  withdraw their contributions.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-4" className="border rounded-lg px-6">
+                <AccordionTrigger className="text-left">
+                  What cryptocurrencies are supported?
+                </AccordionTrigger>
+                <AccordionContent>
+                  Currently, we support ETH and other ERC-20 tokens on the
+                  Ethereum network. We're working on expanding to other
+                  blockchains.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="item-5" className="border rounded-lg px-6">
+                <AccordionTrigger className="text-left">
+                  Are there any fees?
+                </AccordionTrigger>
+                <AccordionContent>
+                  BlockRaise charges a minimal platform fee of 2% on successful
+                  campaigns. Gas fees for blockchain transactions are paid by
+                  users.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Footer */}
+      <Footer />
     </div>
   );
 }
