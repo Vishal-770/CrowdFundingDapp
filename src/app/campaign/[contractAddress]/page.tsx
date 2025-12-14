@@ -23,9 +23,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2, Plus, Copy } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
-
+import { Plus, Trash2, Copy, Info } from "lucide-react";
 
 interface Tier {
   name: string;
@@ -124,9 +130,6 @@ const CampaignPage = () => {
     contract,
     method: "function getGoalInUSD() view returns (uint256)",
   });
-  if (!isGoalLoading && goalData) {
-    console.log(Number(goalData) / 1e18);
-  }
 
   const { data: balanceData } = useReadContract({
     contract,
@@ -263,8 +266,8 @@ const CampaignPage = () => {
   // USD amounts (with 8 decimals)
   const ethPrice = ethPriceData ? Math.abs(Number(ethPriceData)) / 1e8 : 0;
   console.log(ethPrice);
-  const goalETH = goalData ? Number(goalData) / 1e18 : 0;
-  const goalUSD = ethPrice > 0 ? goalETH * ethPrice : 0;
+  const goalUSD = goalData ? Number(goalData) / 1e8 : 0;
+  const goalETH = ethPrice > 0 ? goalUSD / ethPrice : 0;
   const balanceUSD = totalRaisedUSDData ? Number(totalRaisedUSDData) / 1e8 : 0;
   const balanceETH = balanceData ? weiToETH(balanceData) : 0;
 
@@ -296,50 +299,53 @@ const CampaignPage = () => {
       : null;
 
   return (
-    <div className="w-full min-h-screen bg-background px-4 md:px-6 lg:px-12 py-20 md:py-28">
-      {/* Paused State */}
-      <div className="w-full max-w-5xl mx-auto mb-4">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm md:text-base">
-            Paused State:
-          </span>
-          <span
-            className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium ${
-              pausedData
-                ? "bg-yellow-500 text-black"
-                : "bg-green-600 text-white"
-            }`}
-          >
-            {pausedData ? "Paused" : "Not Paused"}
-          </span>
-        </div>
-      </div>
-
+    <div className="w-full min-h-screen bg-background px-4 md:px-8 lg:px-16 py-20 md:py-28">
       {/* Campaign Overview */}
-      <div className="w-full max-w-5xl mx-auto border rounded-xl md:rounded-2xl shadow-sm p-4 md:p-6 lg:p-10 bg-card text-card-foreground mb-8 md:mb-12">
-        <div className="flex items-center justify-between flex-wrap gap-4 mb-4 md:mb-6">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">
-            {nameData || "Loading..."}
-          </h1>
-          {status && (
+      <div className="w-full p-6 md:p-8 lg:p-12 mb-12">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+          {nameData ? (
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">
+              {nameData}
+            </h1>
+          ) : (
+            <Skeleton className="h-12 w-96" />
+          )}
+          {status ? (
             <span
-              className={`px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-medium rounded-full ${status.className}`}
+              className={`px-4 py-2 text-sm font-medium rounded-full ${status.className}`}
             >
               {status.text}
             </span>
+          ) : (
+            <Skeleton className="h-8 w-24" />
           )}
         </div>
 
-        <p className="text-sm md:text-base lg:text-lg text-muted-foreground mb-4 md:mb-6">
-          {descriptionData || "Loading description..."}
-        </p>
-
-        <div className="flex items-center gap-2 mb-4 md:mb-6">
-          <p className="text-sm md:text-base">
-            <span className="font-medium">Owner:</span>{" "}
-            {shortenAddress(ownerData)}
+        {descriptionData ? (
+          <p className="text-base md:text-lg lg:text-xl text-muted-foreground mb-6">
+            {descriptionData}
           </p>
-          {ownerData && (
+        ) : (
+          <Skeleton className="h-6 w-full mb-6" />
+        )}
+
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-sm md:text-base">
+            <span className="font-medium">Campaign creator:</span>{" "}
+            {ownerData ? (
+              <a
+                href={`https://sepolia.etherscan.io/address/${ownerData}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                {shortenAddress(ownerData)}
+              </a>
+            ) : (
+              <Skeleton className="h-4 w-20 inline-block" />
+            )}
+          </span>
+          {ownerData ? (
             <Button
               variant="ghost"
               size="icon"
@@ -351,100 +357,174 @@ const CampaignPage = () => {
             >
               <Copy className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
+          ) : (
+            <Skeleton className="h-6 w-6" />
           )}
         </div>
 
         {/* Goal, Raised & Remaining */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-          <div className="bg-muted rounded-lg md:rounded-xl p-3 md:p-4">
-            <p className="text-xs md:text-sm text-muted-foreground mb-1">
-              Goal
-            </p>
-            <p className="text-lg md:text-xl font-semibold">
-              {formatUSD(goalUSD)}
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground mb-2">Goal</p>
+            {isGoalLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <p className="text-xl md:text-2xl font-semibold">
+                {formatUSD(goalUSD)}
+              </p>
+            )}
             {goalETH > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 ≈ {formatETH(goalETH)}
               </p>
             )}
           </div>
-          <div className="bg-muted rounded-lg md:rounded-xl p-3 md:p-4">
-            <p className="text-xs md:text-sm text-muted-foreground mb-1">
-              Raised
-            </p>
-            <p className="text-lg md:text-xl font-semibold">
-              {formatUSD(balanceUSD)}
-            </p>
-            <p className="text-xs text-muted-foreground">
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground mb-2">Raised</p>
+            {totalRaisedUSDData !== undefined ? (
+              <p
+                className={`text-xl md:text-2xl font-semibold ${
+                  progress >= 100 ? "text-green-600 dark:text-green-400" : ""
+                }`}
+              >
+                {formatUSD(balanceUSD)}
+              </p>
+            ) : (
+              <Skeleton className="h-8 w-24" />
+            )}
+            <p className="text-sm text-muted-foreground">
               ≈ {formatETH(balanceETH)}
             </p>
           </div>
-          <div className="bg-muted rounded-lg md:rounded-xl p-3 md:p-4">
-            <p className="text-xs md:text-sm text-muted-foreground mb-1">
-              Remaining
-            </p>
-            <p className="text-lg md:text-xl font-semibold">
-              {formatUSD(Math.max(goalUSD - balanceUSD, 0))}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              ≈ {formatETH(remainingETH)}
-            </p>
-          </div>
+          {progress < 100 && (
+            <div className="p-4">
+              <p className="text-sm text-muted-foreground mb-2">Remaining</p>
+              {totalRaisedUSDData !== undefined && goalData !== undefined ? (
+                <p className="text-lg md:text-xl font-semibold text-muted-foreground">
+                  {formatUSD(Math.max(goalUSD - balanceUSD, 0))}
+                </p>
+              ) : (
+                <Skeleton className="h-8 w-24" />
+              )}
+              <p className="text-sm text-muted-foreground">
+                ≈ {formatETH(remainingETH)}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Progress */}
         <div className="mb-4 md:mb-6">
           <div className="w-full bg-muted rounded-full h-3 md:h-4 overflow-hidden">
             <div
-              className="bg-primary h-3 md:h-4 rounded-full transition-all"
+              className={`h-3 md:h-4 rounded-full transition-all ${
+                progress >= 100
+                  ? "bg-green-500"
+                  : progress >= 70
+                  ? "bg-amber-500"
+                  : "bg-primary"
+              }`}
               style={{ width: `${progress}%` }}
             />
+            {progress >= 100 && (
+              <div className="flex items-center justify-center h-full">
+                <span className="text-white text-xs font-bold">✓</span>
+              </div>
+            )}
           </div>
           <p className="text-xs md:text-sm text-muted-foreground mt-2">
-            {progress.toFixed(2)}% funded • {formatETH(remainingETH)} remaining
+            {progress >= 100
+              ? "100% funded · Goal achieved"
+              : `${progress.toFixed(2)}% funded · ${formatETH(
+                  remainingETH
+                )} remaining`}
           </p>
         </div>
 
         {/* Campaign Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
           <div className="text-center">
-            <p className="text-xl md:text-2xl font-bold text-primary">
-              {campaignDetailsData ? Number(campaignDetailsData[8]) : 0}
-            </p>
-            <p className="text-xs text-muted-foreground">Backers</p>
+            {campaignDetailsData ? (
+              <p className="text-2xl md:text-3xl font-bold text-primary">
+                {Number(campaignDetailsData[8])}
+              </p>
+            ) : (
+              <Skeleton className="h-8 w-12 mx-auto" />
+            )}
+            <p className="text-sm text-muted-foreground">Backers</p>
           </div>
           <div className="text-center">
-            <p className="text-xl md:text-2xl font-bold text-primary">
-              {tiersData ? tiersData.length : 0}
-            </p>
-            <p className="text-xs text-muted-foreground">Tiers</p>
+            {tiersData ? (
+              <p className="text-2xl md:text-3xl font-bold text-primary">
+                {tiersData.length}
+              </p>
+            ) : (
+              <Skeleton className="h-8 w-12 mx-auto" />
+            )}
+            <p className="text-sm text-muted-foreground">Tiers</p>
           </div>
           <div className="text-center">
-            <p className="text-lg md:text-2xl font-bold text-primary">
-              {timeRemainingData && Number(timeRemainingData) > 0
-                ? formatTimeRemaining(timeRemainingData)
-                : "Ended"}
+            {status?.text === "Successful" ? (
+              <div>
+                <p className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">
+                  🎉 Funded
+                </p>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  Goal achieved
+                </p>
+              </div>
+            ) : timeRemainingData && Number(timeRemainingData) > 0 ? (
+              <p className="text-xl md:text-2xl font-bold text-primary">
+                {formatTimeRemaining(timeRemainingData)}
+              </p>
+            ) : campaignDetailsData ? (
+              <p className="text-xl md:text-2xl font-bold text-primary">
+                Ended
+              </p>
+            ) : (
+              <Skeleton className="h-6 w-16 mx-auto" />
+            )}
+            <p className="text-sm text-muted-foreground">
+              {status?.text === "Successful" ? "Status" : "Time Left"}
             </p>
-            <p className="text-xs text-muted-foreground">Time Left</p>
           </div>
           <div className="text-center">
-            <p className="text-xl md:text-2xl font-bold text-primary">
-              {ethPrice > 0 ? formatUSD(ethPrice) : "Loading..."}
-            </p>
+            {ethPriceData ? (
+              <div className="flex items-center justify-center gap-1">
+                <p className="text-lg md:text-xl font-semibold text-muted-foreground">
+                  {formatUSD(ethPrice)}
+                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Current ETH price from Chainlink</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <Skeleton className="h-6 w-16 mx-auto" />
+            )}
             <p className="text-xs text-muted-foreground">ETH Price</p>
           </div>
         </div>
 
-        <p className="text-sm md:text-base">
-          <span className="font-medium">Deadline:</span>{" "}
-          {formatDate(deadlineData)}
-          {timeRemainingData && Number(timeRemainingData) > 0 && (
-            <span className="text-xs md:text-sm text-muted-foreground ml-2">
-              ({formatTimeRemaining(timeRemainingData)} remaining)
-            </span>
-          )}
-        </p>
+        {deadlineData ? (
+          <p className="text-base mb-6">
+            <span className="font-medium">Deadline:</span>{" "}
+            {formatDate(deadlineData)}
+            {timeRemainingData && Number(timeRemainingData) > 0 && (
+              <span className="text-sm text-muted-foreground ml-2">
+                ({formatTimeRemaining(timeRemainingData)} remaining)
+              </span>
+            )}
+          </p>
+        ) : (
+          <Skeleton className="h-4 w-32 mb-6" />
+        )}
 
         {/* Owner Actions */}
         {account?.address === ownerData && (
@@ -538,10 +618,37 @@ const CampaignPage = () => {
         )}
       </div>
 
+      {/* Your Contributions Section */}
+      {account?.address && userContributionsUSD > 0 && (
+        <div className="w-full p-6 md:p-8 lg:p-12 mb-12 bg-muted/30 rounded-lg">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4">
+            Your Contributions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Contributed</p>
+              <p className="text-2xl font-bold text-primary">
+                {formatUSD(userContributionsUSD)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                ≈ {formatETH(userContributionsWei / 1e18)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Tiers Funded</p>
+              <p className="text-2xl font-bold text-primary">
+                {backerDetailsData ? backerDetailsData[2].length : 0}
+              </p>
+              <p className="text-sm text-muted-foreground">Active support</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tiers Section */}
-      <div className="w-full max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-semibold">Support Tiers</h2>
+      <div className="w-full">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-semibold">Support Tiers</h2>
 
           {account?.address === ownerData && isEdit && (
             <Dialog>
@@ -632,31 +739,54 @@ const CampaignPage = () => {
         </div>
 
         {isTiersLoading ? (
-          <p className="text-muted-foreground text-sm md:text-base">
-            Loading tiers...
-          </p>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="p-6">
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-24 mb-4" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
         ) : (
-          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {tiersData?.map((tier: Tier, idx: number) => (
               <div
                 key={idx}
-                className="border rounded-lg md:rounded-xl shadow-sm p-4 md:p-6 bg-card text-card-foreground flex flex-col justify-between hover:shadow-md transition-all duration-300"
+                className={`p-6 flex flex-col justify-between border rounded-lg ${
+                  backerDetailsData &&
+                  backerDetailsData[2].includes(BigInt(idx))
+                    ? "border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10"
+                    : ""
+                }`}
               >
                 <div>
-                  <h3 className="text-base md:text-lg font-bold mb-2">
-                    {tier.name}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-base md:text-lg font-bold">
+                      {tier.name}
+                    </h3>
+                    {backerDetailsData &&
+                      backerDetailsData[2].includes(BigInt(idx)) && (
+                        <span className="text-green-600 dark:text-green-400">
+                          ✓
+                        </span>
+                      )}
+                  </div>
                   <p className="text-sm mb-1">
-                    <span className="font-medium">Amount:</span>{" "}
-                    {formatTierAmount(tier.amount)}
+                    <span className="font-medium">
+                      {formatTierAmount(tier.amount)}
+                    </span>
+                    {ethPrice > 0 && (
+                      <span className="text-muted-foreground ml-1">
+                        ≈ {formatETH(Number(tier.amount) / 1e8 / ethPrice)}
+                      </span>
+                    )}
                   </p>
-                  {ethPrice > 0 && (
-                    <p className="text-xs text-muted-foreground mb-1">
-                      ≈ {formatETH(Number(tier.amount) / 1e8 / ethPrice)}
-                    </p>
-                  )}
-                  <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
-                    {Number(tier.backers)} backers
+                  <p className="text-xs text-muted-foreground mb-3">
+                    (ETH amount adjusts with price)
+                  </p>
+                  <p className="text-sm font-medium text-primary mb-3">
+                    {tier.name} · {Number(tier.backers)} backers
                   </p>
                   {backerDetailsData &&
                     backerDetailsData[2].includes(BigInt(idx)) && (
@@ -697,9 +827,11 @@ const CampaignPage = () => {
                     }
                   >
                     {pausedData === true
-                      ? "Campaign Paused"
-                      : status?.text !== "Active"
-                      ? "Campaign Not Active"
+                      ? "Paused by creator"
+                      : status?.text === "Successful"
+                      ? "Funding closed (goal reached)"
+                      : status?.text === "Failed"
+                      ? "Campaign ended"
                       : "Fund This Tier"}
                   </TransactionButton>
                 )}
@@ -749,8 +881,19 @@ const CampaignPage = () => {
             ))}
           </div>
         )}
+
+        {status?.text === "Successful" && (
+          <div className="mt-8 p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">
+              ✔ Campaign funded successfully!
+            </h3>
+            <p className="text-sm text-green-700 dark:text-green-300">
+              Funds are now available to the campaign creator. Thank you for
+              your support!
+            </p>
+          </div>
+        )}
       </div>
-     
     </div>
   );
 };

@@ -17,6 +17,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Copy, Check, Info, Clock, Users } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -49,8 +55,14 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
     params: [],
   });
 
-  /* -------------------- Loading State -------------------- */
-  if (loadingCampaign || loadingPrice) {
+  const { data: totalRaisedUSD } = useReadContract({
+    contract,
+    method: "function getTotalRaisedUSD() view returns (uint256)",
+    params: [],
+  });
+
+  /* -------------------- Loading -------------------- */
+  if (loadingCampaign || loadingPrice || totalRaisedUSD === undefined) {
     return (
       <Card>
         <CardHeader>
@@ -60,12 +72,6 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
         <CardContent className="space-y-4">
           <Skeleton className="h-4 w-1/2" />
           <Skeleton className="h-2 w-full" />
-          <div className="grid grid-cols-2 gap-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
         </CardContent>
       </Card>
     );
@@ -84,23 +90,29 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
   const [
     name,
     description,
-    goal,
+    goalRaw,
     deadline,
     owner,
     isPaused,
     state,
-    raised,
+    raisedWei,
     backers,
   ] = campaignDetails;
 
-  /* -------------------- Conversions -------------------- */
+  /* -------------------- CORRECT CONVERSIONS -------------------- */
+
   const ethUsd = Number(ethPrice) / 1e8;
 
-  const goalEth = Number(goal) / 1e18;
-  const raisedEth = Number(raised) / 1e18;
+  // USD values (AUTHORITATIVE)
+  const goalUSD = Number(goalRaw) / 1e8;
+  const raisedUSD = Number(totalRaisedUSD) / 1e8;
+
+  // ETH values (DISPLAY ONLY)
+  const raisedEth = Number(raisedWei) / 1e18;
+  const goalEth = goalUSD / ethUsd;
   const remainingEth = Math.max(goalEth - raisedEth, 0);
 
-  const progress = goalEth > 0 ? (raisedEth / goalEth) * 100 : 0;
+  const progress = goalUSD > 0 ? Math.min((raisedUSD / goalUSD) * 100, 100) : 0;
 
   const deadlineDate = new Date(Number(deadline) * 1000);
   const daysLeft = Math.max(
@@ -112,49 +124,82 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
     state === 0 ? "Active" : state === 1 ? "Successful" : "Failed";
 
   const getStatusBadgeClasses = () => {
-    if (isPaused) return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    if (isPaused) return "bg-muted text-muted-foreground border-muted";
     if (campaignStateLabel === "Failed")
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-destructive text-destructive-foreground border-destructive";
     if (campaignStateLabel === "Successful")
-      return "bg-green-100 text-green-800 border-green-200";
-    return "bg-green-100 text-green-800 border-green-200"; // Active - make it green for positive connotation
+      return "bg-primary text-primary-foreground border-primary";
+    return "bg-secondary text-secondary-foreground border-secondary"; // Active
   };
 
   const formatUSD = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+    if (amount >= 1000000) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(amount);
+    } else if (amount % 1 === 0) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    } else {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    }
   };
 
-  /* -------------------- UI -------------------- */
+  /* -------------------- UI (UNCHANGED) -------------------- */
   return (
     <Link href={`/campaign/${campaignAddress}`}>
-      <Card className="transition hover:shadow-md cursor-pointer">
+      <Card className="transition hover:shadow-lg hover:border-primary/40 cursor-pointer min-h-[600px] flex flex-col">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="text-lg">{name}</CardTitle>
               <CardDescription className="mt-1">{description}</CardDescription>
             </div>
-            <Badge
-              className={`text-xs font-medium border ${getStatusBadgeClasses()}`}
-            >
-              {isPaused ? "Paused" : campaignStateLabel}
-            </Badge>
+            <div className="flex gap-2">
+              <Badge className="text-xs bg-muted text-muted-foreground border-muted">
+                Sepolia
+              </Badge>
+              <Badge
+                className={`text-xs font-medium border ${getStatusBadgeClasses()}`}
+              >
+                {isPaused ? "Paused" : campaignStateLabel}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-5">
-          {/* Progress with Context */}
+          {/* Progress */}
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Progress</span>
               <span className="font-medium">{progress.toFixed(1)}%</span>
             </div>
-            <Progress value={progress} />
+            <Progress
+              value={progress}
+              className="h-3 transition-all duration-1000 ease-out"
+              aria-label={`Campaign progress: ${progress.toFixed(1)}%`}
+            />
+            <p className="text-sm text-center text-muted-foreground">
+              {formatUSD(raisedUSD)} of {formatUSD(goalUSD)} raised
+            </p>
+            {raisedEth === 0 ? (
+              <p className="text-sm text-center text-muted-foreground italic">
+                🚀 ✨ Be the first to support this campaign
+              </p>
+            ) : null}
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Users className="h-3 w-3" />
@@ -162,99 +207,155 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>{daysLeft} days left</span>
+                <span>Ends in {daysLeft} days</span>
               </div>
             </div>
-            {raisedEth === 0 ? (
-              <p className="text-sm text-center text-muted-foreground italic">
-                Be the first to support this campaign 🚀
-              </p>
-            ) : (
+            {raisedEth === 0 ? null : (
               <p className="text-sm text-center text-muted-foreground">
-                {raisedEth.toFixed(4)} of {goalEth.toFixed(2)} ETH raised
+                {raisedEth.toFixed(4)} of {goalEth.toFixed(4)} ETH raised
               </p>
             )}
           </div>
 
-          {/* Funding Stats with Hierarchy */}
+          {/* Stats */}
           <div className="space-y-4">
-            {/* Raised - Biggest */}
             <div className="text-center p-3 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">
                 Raised
               </p>
-              <p className="text-2xl font-bold text-foreground">
-                {raisedEth.toFixed(4)} ETH
-              </p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-2xl font-bold text-foreground">
+                      {formatUSD(raisedUSD)}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Calculated using Chainlink ETH/USD price feed</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-sm text-muted-foreground">
-                ≈ {formatUSD(raisedEth * ethUsd)}
+                ≈ {raisedEth.toFixed(4)} ETH
+              </p>
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                Tap to contribute
               </p>
             </div>
 
-            {/* Goal and Remaining - Medium/Small */}
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">
                   Goal
                 </p>
-                <p className="text-lg font-semibold text-foreground">
-                  {goalEth.toFixed(2)} ETH
-                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-lg font-semibold text-foreground">
+                        {formatUSD(goalUSD)}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Calculated using Chainlink ETH/USD price feed</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <p className="text-xs text-muted-foreground">
-                  ≈ {formatUSD(goalEth * ethUsd)}
+                  ≈ {goalEth.toFixed(4)} ETH
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">
                   Remaining
                 </p>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {remainingEth.toFixed(4)} ETH
-                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p
+                        className={`text-sm font-medium ${
+                          Math.max(goalUSD - raisedUSD, 0) === 0
+                            ? "text-muted-foreground/50"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {formatUSD(Math.max(goalUSD - raisedUSD, 0))}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Calculated using Chainlink ETH/USD price feed</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <p className="text-xs text-muted-foreground">
-                  ≈ {formatUSD(remainingEth * ethUsd)}
+                  ≈ {remainingEth.toFixed(4)} ETH
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Footer with Owner */}
+          {/* Footer */}
           <div className="border-t pt-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground uppercase tracking-wide">
-                  Owner
+                  Created by
                 </span>
-                <span className="font-mono text-xs bg-muted px-2 py-1 rounded flex items-center gap-1">
-                  {owner.slice(0, 6)}…{owner.slice(-4)}
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-4 w-4 ml-1"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      await navigator.clipboard.writeText(campaignAddress);
-                      setCopied(true);
-                      toast.success("Address copied to clipboard!");
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                  >
-                    {copied ? (
-                      <Check className="h-3 w-3" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                  </Button>
-                </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(
+                            `https://sepolia.etherscan.io/address/${owner}`,
+                            "_blank"
+                          );
+                        }}
+                        className="font-mono text-xs bg-muted px-2 py-1 rounded flex items-center gap-1 hover:bg-muted/80 cursor-pointer"
+                      >
+                        {owner.slice(0, 6)}…{owner.slice(-4)} ↗
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Campaign creator - Click to view on Etherscan</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-4 w-4 ml-1"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await navigator.clipboard.writeText(owner);
+                    setCopied(true);
+                    toast.success("Address copied!");
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </Button>
               </div>
-              <div
-                className="flex items-center gap-1 text-muted-foreground cursor-help"
-                title={`ETH Price: ${formatUSD(ethUsd)}`}
-              >
-                <Info className="h-3 w-3" />
-                <span className="text-xs">ETH: {formatUSD(ethUsd)}</span>
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Info className="h-3 w-3" />
+                      <span className="text-xs text-muted-foreground/70">
+                        ⓘ {formatUSD(ethUsd)}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>ETH Price: {formatUSD(ethUsd)} (via Chainlink)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardContent>

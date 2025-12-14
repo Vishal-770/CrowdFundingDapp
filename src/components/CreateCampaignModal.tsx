@@ -52,8 +52,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   } = useForm<CampaignFormData>();
 
   const buildTx = (data: CampaignFormData) => {
-    // Convert ETH to wei (e.g., 2.5 ETH -> 2500000000000000000 wei)
-    const goalInWei = parseFloat(data.goal) * 1e18;
+    // Convert USD to 8 decimals (e.g., 1000 USD -> 1000000000000)
+    const goalInUSD = parseFloat(data.goal) * 1e8;
 
     return prepareContractCall({
       contract,
@@ -62,7 +62,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       params: [
         data.name,
         data.description,
-        BigInt(goalInWei),
+        BigInt(goalInUSD),
         BigInt(data.duration),
       ],
     });
@@ -114,12 +114,12 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
           {/* Goal */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="goal">Goal (ETH)</Label>
+            <Label htmlFor="goal">Goal (USD)</Label>
             <Input
               id="goal"
               type="number"
-              step="0.001"
-              placeholder="2.5"
+              step="0.01"
+              placeholder="1000"
               {...register("goal", {
                 required: "Goal is required",
                 validate: (val) =>
@@ -127,7 +127,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               })}
             />
             <p className="text-xs text-muted-foreground">
-              Enter your funding goal in ETH
+              Enter your funding goal in USD (e.g., 1000 for $1000)
             </p>
             {errors.goal && (
               <p className="text-sm text-red-500">{errors.goal.message}</p>
