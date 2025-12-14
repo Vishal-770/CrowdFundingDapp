@@ -25,6 +25,18 @@ import {
   Copy,
   AlertTriangle,
   Info,
+  Download,
+  Zap,
+  Shield,
+  DollarSign,
+  CheckCircle,
+  XCircle,
+  Pause,
+  Play,
+  TrendingUp,
+  Calendar,
+  Target,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
@@ -36,32 +48,42 @@ export default function ApiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background mt-15">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 text-foreground">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16 px-6">
+      <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 md:py-16 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center space-y-6">
+          <div className="text-center space-y-4 md:space-y-6">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Code className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold">BlockRaise API Reference</h1>
+              <Code className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">
+                BlockRaise API Reference
+              </h1>
             </div>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
               Complete API documentation for BlockRaise smart contracts.
               Interact directly with the blockchain for advanced integrations
               and custom applications.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Badge variant="secondary" className="px-3 py-1">
-                <FileText className="h-4 w-4 mr-1" />
+            <div className="flex flex-wrap justify-center gap-2 md:gap-4">
+              <Badge variant="secondary" className="px-3 py-1 text-sm">
+                <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                 Solidity Contracts
               </Badge>
-              <Badge variant="secondary" className="px-3 py-1">
-                <Settings className="h-4 w-4 mr-1" />
+              <Badge variant="secondary" className="px-3 py-1 text-sm">
+                <Settings className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                 Ethereum Sepolia
               </Badge>
-              <Badge variant="secondary" className="px-3 py-1">
-                <Code className="h-4 w-4 mr-1" />
+              <Badge variant="secondary" className="px-3 py-1 text-sm">
+                <Code className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                 Web3 Integration
+              </Badge>
+              <Badge variant="secondary" className="px-3 py-1 text-sm">
+                <Zap className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                Chainlink Oracle
+              </Badge>
+              <Badge variant="secondary" className="px-3 py-1 text-sm">
+                <Shield className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                Decentralized
               </Badge>
             </div>
           </div>
@@ -69,11 +91,21 @@ export default function ApiPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto max-w-6xl px-6 py-12">
-        <Tabs defaultValue="factory" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="factory">CrowdFundingFactory</TabsTrigger>
-            <TabsTrigger value="campaign">CrowdFunding</TabsTrigger>
+      <div className="container mx-auto max-w-6xl px-4 md:px-6 py-8 md:py-12">
+        <Tabs defaultValue="factory" className="space-y-6 md:space-y-8">
+          <TabsList className="grid w-full grid-cols-2 h-auto p-1">
+            <TabsTrigger
+              value="factory"
+              className="text-sm md:text-base py-2 md:py-3"
+            >
+              CrowdFundingFactory
+            </TabsTrigger>
+            <TabsTrigger
+              value="campaign"
+              className="text-sm md:text-base py-2 md:py-3"
+            >
+              CrowdFunding
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="factory" className="space-y-8">
@@ -339,6 +371,153 @@ export default function ApiPage() {
                               <p className="text-sm text-yellow-700 dark:text-yellow-300">
                                 This function can only be called by the factory
                                 owner.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="get-campaigns-count">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        getCampaignsCount()
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        Read
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Returns the total number of campaigns created through
+                          this factory.
+                        </p>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Returns</h4>
+                          <p className="text-sm text-muted-foreground">
+                            <code>uint256</code> - Total number of campaigns
+                          </p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="get-user-campaigns-count">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        getUserCampaignsCount(address)
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        Read
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Returns the number of campaigns created by a specific
+                          user.
+                        </p>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Parameters</h4>
+                          <div className="text-sm">
+                            <code>address _user</code> - User address
+                          </div>
+                        </div>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Returns</h4>
+                          <p className="text-sm text-muted-foreground">
+                            <code>uint256</code> - Number of user&apos;s
+                            campaigns
+                          </p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="get-campaign-by-index">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        getCampaignByIndex(uint256)
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        Read
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Returns campaign details by index in the global
+                          campaigns array.
+                        </p>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Parameters</h4>
+                          <div className="text-sm">
+                            <code>uint256 _index</code> - Campaign index
+                            (0-based)
+                          </div>
+                        </div>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Returns</h4>
+                          <div className="text-sm space-y-1">
+                            <div>
+                              <code>address campaignAddress</code> - Campaign
+                              contract address
+                            </div>
+                            <div>
+                              <code>address owner</code> - Campaign owner
+                            </div>
+                            <div>
+                              <code>string name</code> - Campaign name
+                            </div>
+                            <div>
+                              <code>uint256 creationTime</code> - Unix timestamp
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="transfer-ownership">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        transferOwnership(address)
+                      </span>
+                      <Badge variant="destructive" className="ml-2">
+                        Owner Only
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Transfers ownership of the factory contract to a new
+                          address.
+                        </p>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Parameters</h4>
+                          <div className="text-sm">
+                            <code>address _newOwner</code> - New owner address
+                          </div>
+                        </div>
+
+                        <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                            <div>
+                              <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                                Irreversible Action
+                              </h4>
+                              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                                This action cannot be undone. Make sure the new
+                                owner address is correct.
                               </p>
                             </div>
                           </div>
@@ -668,6 +847,295 @@ export default function ApiPage() {
                       </div>
                     </AccordionContent>
                   </AccordionItem>
+
+                  <AccordionItem value="remove-tier">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        removeTier(uint256)
+                      </span>
+                      <Badge variant="destructive" className="ml-2">
+                        Owner Only
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Removes a funding tier from an active campaign.
+                        </p>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Parameters</h4>
+                          <div className="text-sm">
+                            <code>uint256 _index</code> - Tier index to remove
+                          </div>
+                        </div>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Requirements</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            <li>• Campaign must be active</li>
+                            <li>• Caller must be owner</li>
+                            <li>• Tier index must exist</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="toggle-pause-campaign">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">togglePause()</span>
+                      <Badge variant="destructive" className="ml-2">
+                        Owner Only
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Toggles the campaign pause state. When paused, no new
+                          contributions can be made.
+                        </p>
+
+                        <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                          <div className="flex items-start gap-2">
+                            <Pause className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                            <div>
+                              <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                                Pause Control
+                              </h4>
+                              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                                Use this to temporarily halt funding during
+                                emergencies.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="extend-deadline">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        extendDeadline(uint256)
+                      </span>
+                      <Badge variant="destructive" className="ml-2">
+                        Owner Only
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Extends the campaign deadline by the specified number
+                          of days.
+                        </p>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Parameters</h4>
+                          <div className="text-sm">
+                            <code>uint256 _days</code> - Number of days to
+                            extend
+                          </div>
+                        </div>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Requirements</h4>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            <li>• Campaign must be active</li>
+                            <li>• Caller must be owner</li>
+                            <li>• Extension days must be greater than 0</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="get-contract-balance">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        getContractBalance()
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        Read
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Returns the current ETH balance of the campaign
+                          contract.
+                        </p>
+
+                        <div className="bg-muted p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Returns</h4>
+                          <p className="text-sm text-muted-foreground">
+                            <code>uint256</code> - Contract balance in wei
+                          </p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="convert-functions">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        Conversion Functions
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        Read
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Various functions for converting between USD and ETH
+                          values.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              convertUSDToWei(uint256)
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Converts USD amount (8 decimals) to wei equivalent
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              convertWeiToUSD(uint256)
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Converts wei amount to USD equivalent (8 decimals)
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              convertETHToUSD(uint256)
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Alias for convertWeiToUSD
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              getMinimumETHForTier(uint256)
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns minimum ETH needed for a specific tier
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="progress-functions">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        Progress & Status Functions
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        Read
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Functions to check campaign progress and status.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              getProgress()
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns campaign progress as percentage (0-100)
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              getTimeRemaining()
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns seconds remaining until deadline
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              getCampaignStatus()
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns current campaign state
+                              (Active/Successful/Failed)
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              isDeadlinePassed()
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns true if campaign deadline has passed
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="backer-functions">
+                    <AccordionTrigger>
+                      <span className="font-mono text-sm">
+                        Backer Functions
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        Read
+                      </Badge>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          Functions to retrieve backer information and check
+                          permissions.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              getBackerDetails(address)
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns backer&apos;s contribution details and
+                              funded tiers
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              hasFundedTier(address, uint256)
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Checks if a backer has funded a specific tier
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">
+                              canWithdraw()
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns true if owner can withdraw funds
+                            </p>
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <h4 className="font-semibold mb-2">canRefund()</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Returns true if caller can claim refund
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 </Accordion>
               </CardContent>
             </Card>
@@ -807,6 +1275,220 @@ interface ICrowdFunding {
                 </div>
               </TabsContent>
             </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* Events Section */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Contract Events
+            </CardTitle>
+            <CardDescription>
+              Important events emitted by the smart contracts for tracking and
+              integration
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="factory-events" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="factory-events">Factory Events</TabsTrigger>
+                <TabsTrigger value="campaign-events">
+                  Campaign Events
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="factory-events" className="space-y-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    CampaignCreated
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Emitted when a new campaign is created through the factory.
+                  </p>
+                  <div className="text-xs font-mono bg-background p-2 rounded">
+                    event CampaignCreated(address indexed campaignAddress,
+                    address indexed owner, string name, uint256 goal, uint256
+                    deadline);
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="campaign-events" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-500" />
+                      Funded
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Emitted when a backer contributes to a campaign.
+                    </p>
+                    <div className="text-xs font-mono bg-background p-2 rounded">
+                      event Funded(address indexed backer, uint256 indexed
+                      tierIndex, uint256 usdValue, uint256 weiValue);
+                    </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-blue-500" />
+                      Withdrawn
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Emitted when campaign owner withdraws funds.
+                    </p>
+                    <div className="text-xs font-mono bg-background p-2 rounded">
+                      event Withdrawn(address indexed owner, uint256 amount);
+                    </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      Refunded
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Emitted when a backer claims a refund.
+                    </p>
+                    <div className="text-xs font-mono bg-background p-2 rounded">
+                      event Refunded(address indexed backer, uint256 amount);
+                    </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Target className="h-4 w-4 text-purple-500" />
+                      TierAdded
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Emitted when a new funding tier is added.
+                    </p>
+                    <div className="text-xs font-mono bg-background p-2 rounded">
+                      event TierAdded(uint256 indexed tierIndex, string name,
+                      uint256 amount);
+                    </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-orange-500" />
+                      DeadlineExtended
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Emitted when campaign deadline is extended.
+                    </p>
+                    <div className="text-xs font-mono bg-background p-2 rounded">
+                      event DeadlineExtended(uint256 newDeadline);
+                    </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <Play className="h-4 w-4 text-indigo-500" />
+                      CampaignStateChanged
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Emitted when campaign state changes.
+                    </p>
+                    <div className="text-xs font-mono bg-background p-2 rounded">
+                      event CampaignStateChanged(CampaignState newState);
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* Contract Source & ABI */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="h-5 w-5" />
+              Contract Source & ABI
+            </CardTitle>
+            <CardDescription>
+              Download contract source code and ABI files for integration
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-semibold">CrowdFundingFactory</h4>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="/contracts/CrowdFundingFactory.sol" download>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Source Code (.sol)
+                    </a>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a
+                      href="/artifacts-zk/contracts/CrowdFundingFactory.sol/CrowdFundingFactory.json"
+                      download
+                    >
+                      <Code className="h-4 w-4 mr-2" />
+                      ABI & Bytecode (.json)
+                    </a>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">CrowdFunding</h4>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="/contracts/CrowdFunding.sol" download>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Source Code (.sol)
+                    </a>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a
+                      href="/artifacts-zk/contracts/CrowdFunding.sol/CrowdFunding.json"
+                      download
+                    >
+                      <Code className="h-4 w-4 mr-2" />
+                      ABI & Bytecode (.json)
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-2">
+                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-blue-800 dark:text-blue-200">
+                    Deployment Information
+                  </h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Contracts are deployed on Ethereum Sepolia testnet. Use the
+                    provided addresses and ABIs for your integrations.
+                  </p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

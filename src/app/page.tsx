@@ -31,11 +31,11 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground ">
       {/* Navigation Bar */}
 
       {/* Hero Section */}
-      <section className="relative py-25 px-6 overflow-hidden">
+      <section className="relative py-25 px-6 overflow-hidden mb-10">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -297,9 +297,9 @@ export default function LandingPage() {
                   How do I create a campaign?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Connect your wallet, click "Create Campaign", fill in your
-                  project details, set funding goals and deadlines, and deploy
-                  your campaign to the blockchain.
+                  Connect your wallet, click &quot;Create Campaign&quot;, fill
+                  in your project details, set funding goals and deadlines, and
+                  deploy your campaign to the blockchain.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="item-3" className="border rounded-lg px-6">
@@ -318,7 +318,7 @@ export default function LandingPage() {
                 </AccordionTrigger>
                 <AccordionContent>
                   Currently, we support ETH and other ERC-20 tokens on the
-                  Ethereum network. We're working on expanding to other
+                  Ethereum network. We&apos;re working on expanding to other
                   blockchains.
                 </AccordionContent>
               </AccordionItem>
