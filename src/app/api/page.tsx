@@ -48,7 +48,7 @@ export default function ApiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 text-foreground mt-15">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 md:py-16 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
