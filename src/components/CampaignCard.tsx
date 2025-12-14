@@ -100,7 +100,7 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
   const raisedEth = Number(raised) / 1e18;
   const remainingEth = Math.max(goalEth - raisedEth, 0);
 
-  const progress = goalEth > 0 ? Math.min((raisedEth / goalEth) * 100, 100) : 0;
+  const progress = goalEth > 0 ? (raisedEth / goalEth) * 100 : 0;
 
   const deadlineDate = new Date(Number(deadline) * 1000);
   const daysLeft = Math.max(
@@ -117,7 +117,7 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
       return "bg-red-100 text-red-800 border-red-200";
     if (campaignStateLabel === "Successful")
       return "bg-green-100 text-green-800 border-green-200";
-    return "bg-blue-100 text-blue-800 border-blue-200"; // Active
+    return "bg-green-100 text-green-800 border-green-200"; // Active - make it green for positive connotation
   };
 
   const formatUSD = (amount: number) => {
@@ -218,35 +218,40 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
             </div>
           </div>
 
-          {/* Footer with ETH Price and Owner */}
+          {/* Footer with Owner */}
           <div className="border-t pt-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Owner</span>
-                <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                  {owner.slice(0, 6)}…{owner.slice(-4)}
+                <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                  Owner
                 </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    await navigator.clipboard.writeText(campaignAddress);
-                    setCopied(true);
-                    toast.success("Address copied to clipboard!");
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                >
-                  {copied ? (
-                    <Check className="h-3 w-3" />
-                  ) : (
-                    <Copy className="h-3 w-3" />
-                  )}
-                </Button>
+                <span className="font-mono text-xs bg-muted px-2 py-1 rounded flex items-center gap-1">
+                  {owner.slice(0, 6)}…{owner.slice(-4)}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-4 w-4 ml-1"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      await navigator.clipboard.writeText(campaignAddress);
+                      setCopied(true);
+                      toast.success("Address copied to clipboard!");
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                  >
+                    {copied ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </span>
               </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
+              <div
+                className="flex items-center gap-1 text-muted-foreground cursor-help"
+                title={`ETH Price: ${formatUSD(ethUsd)}`}
+              >
                 <Info className="h-3 w-3" />
                 <span className="text-xs">ETH: {formatUSD(ethUsd)}</span>
               </div>
