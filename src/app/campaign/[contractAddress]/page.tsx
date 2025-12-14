@@ -119,10 +119,14 @@ const CampaignPage = () => {
     contract,
     method: "function owner() view returns (address)",
   });
-  const { data: goalData } = useReadContract({
+  const { data: goalData, isPending: isGoalLoading } = useReadContract({
     contract,
     method: "function getGoalInUSD() view returns (uint256)",
   });
+  if (!isGoalLoading && goalData) {
+    console.log(Number(goalData) / 1e18);
+  }
+
   const { data: balanceData } = useReadContract({
     contract,
     method: "function getContractBalance() view returns (uint256)",
@@ -254,13 +258,14 @@ const CampaignPage = () => {
   const weiToETH = (wei: bigint | number) => {
     return Number(wei) / 1e18;
   };
-
+  console.log(tiersData);
   // USD amounts (with 8 decimals)
   const ethPrice = ethPriceData ? Math.abs(Number(ethPriceData)) / 1e8 : 0;
-  const goalUSD = goalData ? Number(goalData) / 1e8 : 0;
+  console.log(ethPrice);
+  const goalETH = goalData ? Number(goalData) / 1e18 : 0;
+  const goalUSD = ethPrice > 0 ? goalETH * ethPrice : 0;
   const balanceUSD = totalRaisedUSDData ? Number(totalRaisedUSDData) / 1e8 : 0;
   const balanceETH = balanceData ? weiToETH(balanceData) : 0;
-  const goalETH = ethPrice > 0 ? goalUSD / ethPrice : 0;
 
   const formatTierAmount = (amountBigInt: bigint) => {
     const amountUSD = Number(amountBigInt) / 1e8;
@@ -281,6 +286,7 @@ const CampaignPage = () => {
   const userContributionsWei = backerDetailsData
     ? Number(backerDetailsData[1])
     : 0;
+  const remainingETH = Math.max(goalETH - balanceETH, 0);
   const progress =
     goalUSD > 0 ? Math.min((balanceUSD / goalUSD) * 100, 100) : 0;
   const status =
@@ -289,13 +295,15 @@ const CampaignPage = () => {
       : null;
 
   return (
-    <div className="w-full min-h-screen bg-background px-6 md:px-12 py-28">
+    <div className="w-full min-h-screen bg-background px-4 md:px-6 lg:px-12 py-20 md:py-28">
       {/* Paused State */}
       <div className="w-full max-w-5xl mx-auto mb-4">
         <div className="flex items-center gap-3">
-          <span className="font-semibold">Paused State:</span>
+          <span className="font-semibold text-sm md:text-base">
+            Paused State:
+          </span>
           <span
-            className={`px-3 py-1 rounded-full text-sm font-medium ${
+            className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium ${
               pausedData
                 ? "bg-yellow-500 text-black"
                 : "bg-green-600 text-white"
@@ -307,24 +315,26 @@ const CampaignPage = () => {
       </div>
 
       {/* Campaign Overview */}
-      <div className="w-full max-w-5xl mx-auto border rounded-2xl shadow-sm p-10 bg-card text-card-foreground mb-12">
-        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
-          <h1 className="text-4xl font-bold">{nameData || "Loading..."}</h1>
+      <div className="w-full max-w-5xl mx-auto border rounded-xl md:rounded-2xl shadow-sm p-4 md:p-6 lg:p-10 bg-card text-card-foreground mb-8 md:mb-12">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">
+            {nameData || "Loading..."}
+          </h1>
           {status && (
             <span
-              className={`px-4 py-2 text-sm font-medium rounded-full ${status.className}`}
+              className={`px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-medium rounded-full ${status.className}`}
             >
               {status.text}
             </span>
           )}
         </div>
 
-        <p className="text-lg text-muted-foreground mb-6">
+        <p className="text-sm md:text-base lg:text-lg text-muted-foreground mb-4 md:mb-6">
           {descriptionData || "Loading description..."}
         </p>
 
-        <div className="flex items-center gap-2 mb-6">
-          <p className="text-base">
+        <div className="flex items-center gap-2 mb-4 md:mb-6">
+          <p className="text-sm md:text-base">
             <span className="font-medium">Owner:</span>{" "}
             {shortenAddress(ownerData)}
           </p>
@@ -336,63 +346,81 @@ const CampaignPage = () => {
                 navigator.clipboard.writeText(ownerData);
                 toast.success("Address copied to clipboard");
               }}
-              className="h-7 w-7"
+              className="h-6 w-6 md:h-7 md:w-7"
             >
-              <Copy className="h-4 w-4" />
+              <Copy className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
           )}
         </div>
 
-        {/* Goal & Balance */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-          <div className="bg-muted rounded-xl p-4">
-            <p className="text-sm text-muted-foreground mb-1">Goal</p>
-            <p className="text-xl font-semibold">{formatUSD(goalUSD)}</p>
+        {/* Goal, Raised & Remaining */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
+          <div className="bg-muted rounded-lg md:rounded-xl p-3 md:p-4">
+            <p className="text-xs md:text-sm text-muted-foreground mb-1">
+              Goal
+            </p>
+            <p className="text-lg md:text-xl font-semibold">
+              {formatUSD(goalUSD)}
+            </p>
             {goalETH > 0 && (
               <p className="text-xs text-muted-foreground">
                 ≈ {formatETH(goalETH)}
               </p>
             )}
           </div>
-          <div className="bg-muted rounded-xl p-4">
-            <p className="text-sm text-muted-foreground mb-1">Raised</p>
-            <p className="text-xl font-semibold">{formatUSD(balanceUSD)}</p>
+          <div className="bg-muted rounded-lg md:rounded-xl p-3 md:p-4">
+            <p className="text-xs md:text-sm text-muted-foreground mb-1">
+              Raised
+            </p>
+            <p className="text-lg md:text-xl font-semibold">
+              {formatUSD(balanceUSD)}
+            </p>
             <p className="text-xs text-muted-foreground">
               ≈ {formatETH(balanceETH)}
+            </p>
+          </div>
+          <div className="bg-muted rounded-lg md:rounded-xl p-3 md:p-4">
+            <p className="text-xs md:text-sm text-muted-foreground mb-1">
+              Remaining
+            </p>
+            <p className="text-lg md:text-xl font-semibold">
+              {formatUSD(Math.max(goalUSD - balanceUSD, 0))}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              ≈ {formatETH(remainingETH)}
             </p>
           </div>
         </div>
 
         {/* Progress */}
-        <div className="mb-6">
-          <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
+        <div className="mb-4 md:mb-6">
+          <div className="w-full bg-muted rounded-full h-3 md:h-4 overflow-hidden">
             <div
-              className="bg-primary h-4 rounded-full transition-all"
+              className="bg-primary h-3 md:h-4 rounded-full transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            {progress.toFixed(2)}% funded • {formatUSD(goalUSD - balanceUSD)}{" "}
-            remaining
+          <p className="text-xs md:text-sm text-muted-foreground mt-2">
+            {progress.toFixed(2)}% funded • {formatETH(remainingETH)} remaining
           </p>
         </div>
 
         {/* Campaign Statistics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-xl md:text-2xl font-bold text-primary">
               {campaignDetailsData ? Number(campaignDetailsData[8]) : 0}
             </p>
             <p className="text-xs text-muted-foreground">Backers</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-xl md:text-2xl font-bold text-primary">
               {tiersData ? tiersData.length : 0}
             </p>
             <p className="text-xs text-muted-foreground">Tiers</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-lg md:text-2xl font-bold text-primary">
               {timeRemainingData && Number(timeRemainingData) > 0
                 ? formatTimeRemaining(timeRemainingData)
                 : "Ended"}
@@ -400,18 +428,18 @@ const CampaignPage = () => {
             <p className="text-xs text-muted-foreground">Time Left</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-xl md:text-2xl font-bold text-primary">
               {ethPrice > 0 ? formatUSD(ethPrice) : "Loading..."}
             </p>
             <p className="text-xs text-muted-foreground">ETH Price</p>
           </div>
         </div>
 
-        <p className="text-base">
+        <p className="text-sm md:text-base">
           <span className="font-medium">Deadline:</span>{" "}
           {formatDate(deadlineData)}
           {timeRemainingData && Number(timeRemainingData) > 0 && (
-            <span className="text-sm text-muted-foreground ml-2">
+            <span className="text-xs md:text-sm text-muted-foreground ml-2">
               ({formatTimeRemaining(timeRemainingData)} remaining)
             </span>
           )}
@@ -419,11 +447,12 @@ const CampaignPage = () => {
 
         {/* Owner Actions */}
         {account?.address === ownerData && (
-          <div className="flex flex-wrap gap-3 items-center mt-6">
+          <div className="flex flex-wrap gap-2 md:gap-3 items-center mt-4 md:mt-6">
             <Button
-              size="lg"
+              size="sm"
               variant={isEdit ? "secondary" : "outline"}
               onClick={() => setIsEdit((prev) => !prev)}
+              className="text-sm"
             >
               {isEdit ? "Done" : "Edit"}
             </Button>
@@ -449,7 +478,9 @@ const CampaignPage = () => {
               balanceData >= goalInWeiData && ( // check if campaign goal is reached
                 <>
                   <br />
-                  <h3>Goal reached successfully!</h3>
+                  <h3 className="text-sm md:text-base font-semibold text-green-600">
+                    Goal reached successfully!
+                  </h3>
                   <TransactionButton
                     transaction={() =>
                       prepareContractCall({
@@ -474,11 +505,11 @@ const CampaignPage = () => {
 
         {/* Refund Section for Failed Campaigns */}
         {account && status?.text === "Failed" && userContributionsUSD > 0 && (
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-destructive/20">
-            <h3 className="font-semibold text-lg mb-2 text-destructive">
+          <div className="mt-4 md:mt-6 p-3 md:p-4 bg-muted/50 rounded-lg border border-destructive/20">
+            <h3 className="font-semibold text-base md:text-lg mb-2 text-destructive">
               Campaign Failed - Refund Available
             </h3>
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-xs md:text-sm text-muted-foreground mb-3">
               You contributed {formatUSD(userContributionsUSD)} (
               {(userContributionsWei / 1e18).toFixed(6)} ETH) to this campaign.
               Since the campaign failed to meet its goal, you can claim a
@@ -498,7 +529,7 @@ const CampaignPage = () => {
               onError={(error) =>
                 toast.error("Failed to process refund: " + error.message)
               }
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm"
             >
               Claim Refund
             </TransactionButton>
@@ -508,14 +539,14 @@ const CampaignPage = () => {
 
       {/* Tiers Section */}
       <div className="w-full max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold">Support Tiers</h2>
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-semibold">Support Tiers</h2>
 
           {account?.address === ownerData && isEdit && (
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" /> Add Tier
+                <Button className="flex items-center gap-2 text-sm">
+                  <Plus className="h-3 w-3 md:h-4 md:w-4" /> Add Tier
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -600,16 +631,20 @@ const CampaignPage = () => {
         </div>
 
         {isTiersLoading ? (
-          <p className="text-muted-foreground">Loading tiers...</p>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Loading tiers...
+          </p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {tiersData?.map((tier: Tier, idx: number) => (
               <div
                 key={idx}
-                className="border rounded-xl shadow-sm p-6 bg-card text-card-foreground flex flex-col justify-between hover:shadow-md transition-all duration-300"
+                className="border rounded-lg md:rounded-xl shadow-sm p-4 md:p-6 bg-card text-card-foreground flex flex-col justify-between hover:shadow-md transition-all duration-300"
               >
                 <div>
-                  <h3 className="text-lg font-bold mb-2">{tier.name}</h3>
+                  <h3 className="text-base md:text-lg font-bold mb-2">
+                    {tier.name}
+                  </h3>
                   <p className="text-sm mb-1">
                     <span className="font-medium">Amount:</span>{" "}
                     {formatTierAmount(tier.amount)}
@@ -619,7 +654,7 @@ const CampaignPage = () => {
                       ≈ {formatETH(Number(tier.amount) / 1e8 / ethPrice)}
                     </p>
                   )}
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                     {Number(tier.backers)} backers
                   </p>
                   {backerDetailsData &&
@@ -634,7 +669,7 @@ const CampaignPage = () => {
 
                 {!isEdit && (
                   <TransactionButton
-                    className="w-full mt-auto"
+                    className="w-full mt-auto text-sm"
                     disabled={pausedData === true || status?.text !== "Active"}
                     transaction={async () => {
                       // Get the tier price in wei for the transaction
@@ -645,12 +680,12 @@ const CampaignPage = () => {
                           "function getTierPriceInWei(uint256) view returns (uint256)",
                         params: [BigInt(idx)],
                       });
-
+                      console.log(tierPriceInWei);
                       return prepareContractCall({
                         contract,
                         method: "function fund(uint256 _index) payable",
                         params: [BigInt(idx)],
-                        value: tierPriceInWei,
+                        value: tierPriceInWei + BigInt(1),
                       });
                     }}
                     onTransactionConfirmed={() =>
@@ -674,9 +709,9 @@ const CampaignPage = () => {
                       <Button
                         variant="destructive"
                         size="sm"
-                        className="mt-3 flex items-center gap-1"
+                        className="mt-3 flex items-center gap-1 text-xs md:text-sm"
                       >
-                        <Trash2 className="h-4 w-4" /> Remove
+                        <Trash2 className="h-3 w-3 md:h-4 md:w-4" /> Remove
                       </Button>
                     </DialogTrigger>
                     <DialogContent>

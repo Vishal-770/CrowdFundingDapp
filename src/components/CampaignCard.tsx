@@ -118,6 +118,15 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
       ? "secondary"
       : "default";
 
+  const formatUSD = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
   /* -------------------- UI -------------------- */
   return (
     <Link href={`/campaign/${campaignAddress}`}>
@@ -139,7 +148,7 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
           <p className="text-sm text-muted-foreground">
             ETH Price Today:{" "}
             <span className="font-medium text-foreground">
-              ${ethUsd.toFixed(2)}
+              {formatUSD(ethUsd)}
             </span>
           </p>
 
@@ -157,17 +166,17 @@ export default function CampaignCard({ campaignAddress }: CampaignCardProps) {
             <Stat
               label="Goal"
               eth={goalEth.toFixed(2)}
-              usd={(goalEth * ethUsd).toFixed(2)}
+              usd={formatUSD(goalEth * ethUsd)}
             />
             <Stat
               label="Raised"
               eth={raisedEth.toFixed(4)}
-              usd={(raisedEth * ethUsd).toFixed(2)}
+              usd={formatUSD(raisedEth * ethUsd)}
             />
             <Stat
               label="Remaining"
               eth={remainingEth.toFixed(4)}
-              usd={(remainingEth * ethUsd).toFixed(2)}
+              usd={formatUSD(remainingEth * ethUsd)}
             />
             <div>
               <p className="text-muted-foreground">Backers</p>
@@ -228,7 +237,7 @@ function Stat({
       <p className="font-medium">
         {eth} ETH
         <br />
-        <span className="text-xs text-muted-foreground">${usd}</span>
+        <span className="text-xs text-muted-foreground">{usd}</span>
       </p>
     </div>
   );
