@@ -48,7 +48,6 @@ export default function RootLayout({
             {" "}
             <Navbar />
             {children}
-            <Footer />
           </ThirdwebProvider>
           <Toaster />
         </ThemeProvider>

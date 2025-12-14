@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Trash2, Plus, Copy } from "lucide-react";
 import { toast } from "sonner";
 
+
 interface Tier {
   name: string;
   amount: bigint;
@@ -749,6 +750,7 @@ const CampaignPage = () => {
           </div>
         )}
       </div>
+     
     </div>
   );
 };

@@ -61,12 +61,12 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-16">
-              <Link href={"/home"}>
+              <Link href={"/campaigns"}>
                 <Button size="lg" className="gap-2">
                   Launch Your Campaign <Rocket className="w-4 h-4" />
                 </Button>
               </Link>{" "}
-              <Link href={"/home"}>
+              <Link href={"/campaigns"}>
                 <Button
                   size="lg"
                   variant="outline"
@@ -311,12 +311,12 @@ export default function LandingPage() {
                 of blockchain for their fundraising needs.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href={"/home"}>
+                <Link href={"/campaigns"}>
                   <Button size="lg" className="gap-2">
                     Get Started <Rocket className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Link href={"/home"}>
+                <Link href={"/campaigns"}>
                   <Button
                     size="lg"
                     variant="outline"
