@@ -8,6 +8,7 @@ import { useReadContract } from "thirdweb/react";
 import CampaignCard from "@/components/CampaignCard";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import CreateCampaignModal from "@/components/CreateCampaignModal";
 
 export default function Home() {
   const contract = getContract({
@@ -49,7 +50,9 @@ export default function Home() {
           <p className="text-muted-foreground mb-6">
             No campaigns found. Be the first to start one!
           </p>
-          <Button size="lg">Create Campaign</Button>
+          <CreateCampaignModal
+            trigger={<Button size="lg">Create Campaign</Button>}
+          />
         </div>
       ) : (
         <motion.div
